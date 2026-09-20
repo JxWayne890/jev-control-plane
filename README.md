@@ -201,6 +201,6 @@ Licensed under the Apache License 2.0. See [LICENSE](LICENSE).
 Created by John W. Johnson.
 
 1. [GitHub](https://github.com/JxWayne890)
-2. [X](https://x.com/the_JohnWJohnson)
+2. [X](https://x.com/thejohnwjohnson)
 3. [Instagram](https://www.instagram.com/the_JohnWJohnson/)
 4. [Facebook](https://www.facebook.com/share/19KPAr8VVY/?mibextid=wwXIfr)
