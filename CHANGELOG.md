@@ -2,6 +2,14 @@
 
 This project follows Semantic Versioning.
 
+## Unreleased
+
+### Changed
+
+1. Reframed the README around automatic runtime selection and the user problem it solves.
+2. Added a complete feature overview and an explicit Codex usage clarification.
+3. Added launch ready Facebook and LinkedIn post drafts.
+
 ## 0.1.0, 2026-09-20
 
 Initial public release.

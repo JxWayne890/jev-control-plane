@@ -1,11 +1,69 @@
-# Jev Control Plane
+# JEV Control Plane
 
 [![CI](https://github.com/JxWayne890/jev-control-plane/actions/workflows/ci.yml/badge.svg)](https://github.com/JxWayne890/jev-control-plane/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
-Jev Control Plane is an open source Codex plugin that uses the JEV decision model to route delegated work, then applies verified local facts and fixed safety rules before Codex acts.
+Describe the task. Let JEV Control Plane choose the Codex runtime.
 
-It is built for teams that want different tasks to receive different models and reasoning levels without relying on one oversized default. It also keeps scope, repository identity, environment, and production risk visible in every decision.
+JEV Control Plane is an open source Codex plugin that evaluates each request and configures delegated work with an appropriate model and reasoning level before the new task begins. You do not need to memorize which model is best for quick classification, ordinary implementation, architecture, production work, or critical review.
+
+The decision considers task complexity, project scope, repository identity, environment, reversibility, and operational risk. Verified local facts and fixed safety rules remain authoritative before Codex acts.
+
+## Why use it
+
+Choosing a model is part of the work. The right choice can change with the size of the task, the tools involved, the amount of reasoning required, and the consequences of getting it wrong.
+
+JEV Control Plane delegates that routing decision to AI while preserving deterministic local controls. Small and repeatable tasks can receive a faster runtime. Everyday development can receive a balanced runtime. Complex or sensitive work can receive deeper reasoning and stronger models.
+
+The selected Codex task still uses normal Codex usage. The JEV router may also have its own provider cost. The benefit is automatic routing before delegated work begins, not free execution.
+
+## Features
+
+### Automatic runtime selection
+
+1. Evaluates each request before delegated work begins.
+2. Selects a runtime profile based on complexity, risk, scope, and execution requirements.
+3. Selects both the Codex model and reasoning effort.
+4. Applies the decision directly to new delegated threads.
+5. Applies updated routing decisions to follow up messages sent to existing threads.
+6. Supports configurable model mappings for every routing profile.
+
+### Project aware decisions
+
+1. Reads project goals, scope, exclusions, definition of done, expected services, environment, and production policy from `.jev/project.json`.
+2. Detects the current Git repository, remote, branch, and working tree state.
+3. Classifies work as inside scope, a necessary dependency, a change request, unrelated, or unknown.
+4. Recommends whether work should remain in the current thread or move to a new thread.
+5. Recommends an isolated worktree only when the project is a Git repository.
+
+### Safety and control
+
+1. Applies deterministic risk floors for production, billing, authentication, permissions, database migrations, schema changes, secrets, OAuth, DNS, integrations, APIs, and webhooks.
+2. Prevents the decision model from weakening verified safety rules.
+3. Requires confirmation for production or difficult to reverse actions when policy requires it.
+4. Blocks external writes when the repository does not match the configured project.
+5. Blocks consequential external work when required project context is missing.
+6. Offers read only GitHub, Supabase, and Vercel identity checks before consequential external operations.
+
+### Reliability, privacy, and auditing
+
+1. Uses confidence thresholds before accepting subjective routing changes.
+2. Falls back to a labeled local rules engine when JEV is unavailable.
+3. Redacts common credentials before sending compact context to the configured router.
+4. Stores a SHA 256 prompt digest instead of the raw prompt in local decision logs.
+5. Rotates audit logs by size.
+6. Requires bearer authentication and HTTPS for remote router endpoints.
+7. Records the provider, decision model, scope, risk, thread choice, worktree recommendation, runtime profile, reasoning effort, confirmation state, and external write state.
+
+### Tested and open
+
+1. Includes 33 automated tests for routing, safety, fallback behavior, privacy, model mappings, endpoint security, and hook behavior.
+2. Runs continuous integration on macOS and Ubuntu with Python 3.10 and Python 3.12.
+3. Type checks the included TypeScript router.
+4. Includes formal schemas, configuration guidance, a security model, and a verification report.
+5. Is open source under the Apache License 2.0.
+
+More routing profiles, easier setup, richer visibility, and broader host support are planned for future updates.
 
 ## What it does
 
@@ -124,6 +182,7 @@ Local decision logs contain a SHA 256 prompt digest, not the raw prompt. Logs ro
 6. [Architecture design](JEV_CONTROL_PLANE_DESIGN.md)
 7. [Contributing](CONTRIBUTING.md)
 8. [Security policy](SECURITY.md)
+9. [Launch post drafts](docs/launch-posts.md)
 
 ## License
 
