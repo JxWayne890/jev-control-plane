@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jev.dev/schemas/decision.schema.json",
+  "title": "Jev decision",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "decided_at",
+    "client_id",
+    "project_id",
+    "project_phase",
+    "environment",
+    "scope_status",
+    "risk_level",
+    "reversibility",
+    "thread",
+    "model",
+    "runtime",
+    "requires_confirmation",
+    "external_writes_blocked",
+    "decision_provider",
+    "decision_model",
+    "warnings"
+  ],
+  "properties": {
+    "schema_version": {"type": "string"},
+    "decided_at": {"type": "string", "format": "date-time"},
+    "client_id": {"type": "string"},
+    "project_id": {"type": "string"},
+    "project_phase": {"type": "string"},
+    "environment": {"type": "string"},
+    "scope_status": {"enum": ["inside_scope", "necessary_dependency", "change_request", "unrelated", "unknown"]},
+    "risk_level": {"enum": ["low", "medium", "high", "critical"]},
+    "reversibility": {"enum": ["easy", "costly", "difficult"]},
+    "thread": {
+      "type": "object",
+      "required": ["action", "worktree_recommended"],
+      "properties": {
+        "action": {"enum": ["reuse_current", "create_new"]},
+        "worktree_recommended": {"type": "boolean"}
+      }
+    },
+    "model": {
+      "type": "object",
+      "required": ["profile", "reasoning_effort"],
+      "properties": {
+        "profile": {"enum": ["rapid_decision", "balanced_build", "complex_build", "critical_review"]},
+        "reasoning_effort": {"enum": ["low", "medium", "high"]}
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "required": ["model", "reasoning_effort"],
+      "properties": {
+        "model": {"type": "string"},
+        "reasoning_effort": {"enum": ["low", "medium", "high"]}
+      }
+    },
+    "requires_confirmation": {"type": "boolean"},
+    "external_writes_blocked": {"type": "boolean"},
+    "decision_provider": {"enum": ["jev", "local_fallback"]},
+    "decision_model": {"type": "string", "minLength": 1},
+    "warnings": {"type": "array", "items": {"type": "string"}}
+  }
+}

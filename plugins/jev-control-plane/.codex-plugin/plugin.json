@@ -1,0 +1,34 @@
+{
+  "name": "jev-control-plane",
+  "version": "0.1.0+codex.20260920212249",
+  "description": "JEV powered development routing, project context, and safety checks for Codex",
+  "author": {
+    "name": "Jev Contributors"
+  },
+  "license": "Apache-2.0",
+  "keywords": [
+    "jev",
+    "routing",
+    "codex",
+    "safety",
+    "multi-agent"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Jev Control Plane",
+    "shortDescription": "Route development work with less wasted reasoning.",
+    "longDescription": "Jev Control Plane calls JEV to resolve scope, risk, thread, worktree, model profile, and reasoning decisions, then applies verified local facts and production safety checks before Codex acts.",
+    "developerName": "Jev Contributors",
+    "category": "Productivity",
+    "capabilities": [
+      "Project context",
+      "JEV decision model",
+      "Decision routing",
+      "Production safety"
+    ],
+    "defaultPrompt": [
+      "Inspect this project with Jev Control Plane and recommend the safest efficient execution path.",
+      "Show the current Jev routing decision and distinguish the decision model from the delegated runtime model."
+    ]
+  }
+}

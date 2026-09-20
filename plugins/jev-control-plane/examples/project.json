@@ -1,0 +1,59 @@
+{
+  "$schema": "../schemas/project.schema.json",
+  "client": {
+    "client_id": "acme_dental",
+    "display_name": "Acme Dental"
+  },
+  "project": {
+    "project_id": "acme_platform",
+    "project_type": "website_and_crm"
+  },
+  "blueprint": {
+    "phase": "implementation",
+    "business_goal": "Convert more website visitors into qualified leads",
+    "primary_users": [
+      "prospective_patient",
+      "office_manager"
+    ],
+    "scope": {
+      "required": [
+        "lead_capture",
+        "crm_records",
+        "internal_notifications"
+      ],
+      "excluded": [
+        "online payments",
+        "automated cold outreach"
+      ]
+    },
+    "definition_of_done": [
+      "Required flows pass",
+      "Permissions are verified",
+      "Production smoke test passes",
+      "Handoff documentation exists"
+    ]
+  },
+  "services": {
+    "github": {
+      "owner": "acme_dental",
+      "repository": "client_platform",
+      "expected_login": "john_acme"
+    },
+    "supabase": {
+      "project_ref": "project_ref_123"
+    },
+    "vercel": {
+      "project_id": "project_123",
+      "team_id": "team_123",
+      "expected_login": "john_acme"
+    }
+  },
+  "environments": {
+    "default": "staging",
+    "production": "production"
+  },
+  "policy": {
+    "production_requires_confirmation": true,
+    "destructive_actions": "block_without_explicit_request"
+  }
+}

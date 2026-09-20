@@ -1,0 +1,39 @@
+# Security Model
+
+## Trust boundary
+
+Jev Control Plane has three parts:
+
+1. A local Codex hook reads the user prompt, nonsecret project manifest, Git metadata, and local capability state.
+2. A private router endpoint receives a compact request and invokes JEV.
+3. Codex consumes the returned decision context and applies delegated runtime routing.
+
+The router operator controls the endpoint, its logs, and its provider account. Installers should review both hook definitions and the Python script before trusting the hooks.
+
+Remote router endpoints must use HTTPS. The client accepts plain HTTP only for loopback development addresses.
+
+## Data sent to the router
+
+The request can contain prompt text, project identifiers, business goal, scope lists, completion criteria, environment name, repository presence, match state, dirty state, local recommendations, and routing policy flags.
+
+The request does not intentionally include repository contents, file contents, remote URLs, branch names, account identities, API keys, or local decision logs.
+
+Best effort redaction removes common bearer tokens, common provider token prefixes, and assignments whose names contain `TOKEN`, `SECRET`, `PASSWORD`, `API_KEY`, or `PRIVATE_KEY`. Redaction cannot guarantee detection of every credential format. Never place secrets in prompts or project manifests.
+
+## Local storage
+
+Decision logs are written only when Codex supplies `PLUGIN_DATA`. Each record contains decision metadata and a SHA 256 digest of the prompt. The raw prompt is omitted. Logs rotate at a configurable size and retain a configurable number of backups.
+
+## Failures
+
+Network errors, missing credentials, timeouts, invalid JSON, invalid provider identity, and invalid decision values produce a deterministic local fallback. The decision packet names `local_fallback` and includes a warning that explains the fallback class.
+
+The local fallback is useful for continuity, but it is not proof that JEV was consulted. Verify `provider=jev` and `model=typesafe-ai/jev` when a test specifically requires the hosted decision model.
+
+## External writes
+
+The decision packet marks external writes as blocked when the configured repository conflicts with the current repository. It also blocks unresolved projects for live preflight and consequential work. This field is routing context, not an operating system sandbox. The acting agent and host must honor it.
+
+## Reporting vulnerabilities
+
+Do not open a public issue for a suspected vulnerability. Follow the private reporting process in the repository Security tab. Include the affected version, impact, reproduction steps, and any suggested mitigation. Do not include live credentials.

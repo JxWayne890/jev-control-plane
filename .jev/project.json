@@ -1,0 +1,59 @@
+{
+  "client": {
+    "client_id": "john",
+    "display_name": "John"
+  },
+  "project": {
+    "project_id": "jev_control_plane",
+    "project_type": "codex_plugin"
+  },
+  "blueprint": {
+    "phase": "release_candidate",
+    "business_goal": "Help Codex make faster, safer development decisions while reducing unnecessary reasoning and repeated setup.",
+    "primary_users": [
+      "john",
+      "codex_users"
+    ],
+    "scope": {
+      "required": [
+        "project context",
+        "model profile recommendation",
+        "thread recommendation",
+        "worktree recommendation",
+        "delegated runtime model routing",
+        "delegated reasoning routing",
+        "scope classification",
+        "risk classification",
+        "production safety checks",
+        "public release documentation",
+        "continuous integration"
+      ],
+      "excluded": [
+        "changing the model of an already running turn",
+        "creating threads without an explicit delegated thread tool call",
+        "browser account switching",
+        "automatic production writes"
+      ]
+    },
+    "definition_of_done": [
+      "Plugin is installed and enabled",
+      "UserPromptSubmit hook is trusted and active",
+      "PreToolUse routing hook is trusted and active",
+      "Automated tests pass",
+      "Repository validation and CI pass",
+      "Installed hook calls typesafe-ai/jev through Vercel AI Gateway",
+      "Installed hook identifies JEV or local fallback on every decision",
+      "Delegated create_thread and send_message_to_thread calls receive the selected runtime model and reasoning",
+      "Public documentation, license, security policy, contribution guide, and release checklist are present"
+    ]
+  },
+  "services": {},
+  "environments": {
+    "default": "local",
+    "production": "production"
+  },
+  "policy": {
+    "production_requires_confirmation": true,
+    "destructive_actions": "block_without_explicit_request"
+  }
+}

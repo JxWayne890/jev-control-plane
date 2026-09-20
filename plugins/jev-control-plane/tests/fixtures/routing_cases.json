@@ -1,0 +1,58 @@
+[
+  {
+    "name": "simple explanation",
+    "prompt": "What does this configuration field mean?",
+    "risk": "low",
+    "profile": "rapid_decision",
+    "reasoning": "low",
+    "thread": "reuse_current"
+  },
+  {
+    "name": "ordinary implementation",
+    "prompt": "Add validation to the contact form",
+    "risk": "low",
+    "profile": "balanced_build",
+    "reasoning": "medium",
+    "thread": "reuse_current"
+  },
+  {
+    "name": "architectural work",
+    "prompt": "Redesign the architecture for this service",
+    "risk": "low",
+    "profile": "complex_build",
+    "reasoning": "high",
+    "thread": "reuse_current"
+  },
+  {
+    "name": "production safety",
+    "prompt": "Deploy the application to production",
+    "risk": "high",
+    "profile": "critical_review",
+    "reasoning": "high",
+    "thread": "create_new"
+  },
+  {
+    "name": "destructive database change",
+    "prompt": "Drop table leads",
+    "risk": "critical",
+    "profile": "critical_review",
+    "reasoning": "high",
+    "thread": "create_new"
+  },
+  {
+    "name": "continuation stays put",
+    "prompt": "Continue the same form change",
+    "risk": "low",
+    "profile": "balanced_build",
+    "reasoning": "medium",
+    "thread": "reuse_current"
+  },
+  {
+    "name": "substring collision remains low risk",
+    "prompt": "Return the number produced by this rapid calculation",
+    "risk": "low",
+    "profile": "rapid_decision",
+    "reasoning": "low",
+    "thread": "reuse_current"
+  }
+]

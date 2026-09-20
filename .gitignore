@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.DS_Store
+.jev/decisions.jsonl
+.env
+.env.*
+node_modules/
+.next/
