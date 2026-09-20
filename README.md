@@ -3,11 +3,11 @@
 [![CI](https://github.com/JxWayne890/jev-control-plane/actions/workflows/ci.yml/badge.svg)](https://github.com/JxWayne890/jev-control-plane/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
-Describe the task. Let JEV Control Plane choose the Codex runtime.
+Describe the task. Let JEV Control Plane choose the runtime for your coding agent.
 
-JEV Control Plane is an open source Codex plugin that evaluates each request and configures delegated work with an appropriate model and reasoning level before the new task begins. You do not need to memorize which model is best for quick classification, ordinary implementation, architecture, production work, or critical review.
+JEV Control Plane is an open source decision and routing layer for AI coding agents, including Codex and Claude Code. It evaluates each request and recommends an appropriate model, reasoning level, execution path, and safety posture before work begins. You do not need to memorize which model is best for quick classification, ordinary implementation, architecture, production work, or critical review.
 
-The decision considers task complexity, project scope, repository identity, environment, reversibility, and operational risk. Verified local facts and fixed safety rules remain authoritative before Codex acts.
+The decision considers task complexity, project scope, repository identity, environment, reversibility, and operational risk. Verified local facts and fixed safety rules remain authoritative before the coding agent acts.
 
 ## Why use it
 
@@ -15,7 +15,7 @@ Choosing a model is part of the work. The right choice can change with the size 
 
 JEV Control Plane delegates that routing decision to AI while preserving deterministic local controls. Small and repeatable tasks can receive a faster runtime. Everyday development can receive a balanced runtime. Complex or sensitive work can receive deeper reasoning and stronger models.
 
-The selected Codex task still uses normal Codex usage. The JEV router may also have its own provider cost. The benefit is automatic routing before delegated work begins, not free execution.
+The selected development model still uses the normal allowance or billing for its host. The JEV router may also have its own provider cost. The benefit is automatic routing before delegated work begins, not free execution.
 
 ## Features
 
@@ -23,7 +23,7 @@ The selected Codex task still uses normal Codex usage. The JEV router may also h
 
 1. Evaluates each request before delegated work begins.
 2. Selects a runtime profile based on complexity, risk, scope, and execution requirements.
-3. Selects both the Codex model and reasoning effort.
+3. Selects both the runtime model and reasoning effort.
 4. Applies the decision directly to new delegated threads.
 5. Applies updated routing decisions to follow up messages sent to existing threads.
 6. Supports configurable model mappings for every routing profile.
@@ -65,9 +65,15 @@ The selected Codex task still uses normal Codex usage. The JEV router may also h
 
 More routing profiles, easier setup, richer visibility, and broader host support are planned for future updates.
 
+## Agent support
+
+The decision engine is agent independent and is available through a local command interface and a documented JSON router contract. It can be invoked from Codex, Claude Code, or another agent environment.
+
+This repository currently bundles the deepest automation for Codex. Its hooks inject decision context and apply the selected runtime when Codex creates or continues delegated threads. Claude Code can call the same decision engine from its command and hook workflows. A dedicated Claude Code adapter is planned to make installation and automatic runtime application as direct as the bundled Codex experience.
+
 ## What it does
 
-Jev Control Plane provides two complementary hooks:
+For Codex, JEV Control Plane provides two complementary hooks:
 
 1. `UserPromptSubmit` adds a compact decision packet to the current turn. It reports the decision provider, JEV model, scope, risk, thread recommendation, worktree recommendation, model profile, reasoning level, confirmation state, and external write state.
 2. `PreToolUse` intercepts delegated `create_thread` and `send_message_to_thread` calls. It places the selected runtime model and reasoning level directly into the tool input before that child turn begins.

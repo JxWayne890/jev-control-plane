@@ -9,6 +9,7 @@ This project follows Semantic Versioning.
 1. Reframed the README around automatic runtime selection and the user problem it solves.
 2. Added a complete feature overview and an explicit Codex usage clarification.
 3. Added launch ready Facebook and LinkedIn post drafts.
+4. Broadened the product positioning to cover Codex, Claude Code, and other coding agent workflows while documenting the current adapter boundaries.
 
 ## 0.1.0, 2026-09-20
 
