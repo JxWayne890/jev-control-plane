@@ -4,7 +4,7 @@ This project follows Semantic Versioning.
 
 ## 0.1.0, 2026-09-20
 
-Initial public release candidate.
+Initial public release.
 
 ### Added
 

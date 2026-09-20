@@ -32,5 +32,5 @@
 1. Update `CHANGELOG.md`.
 2. Set the plugin manifest version.
 3. Confirm `README.md`, `SECURITY.md`, and `CONTRIBUTING.md` match current behavior.
-4. Add the real repository URL to the plugin manifest after the public repository exists.
+4. Confirm the repository, homepage, support, social, and publisher URLs are current.
 5. Tag the release only after CI and installed runtime verification pass.

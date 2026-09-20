@@ -1,10 +1,13 @@
 {
   "name": "jev-control-plane",
-  "version": "0.1.0+codex.20260920212249",
+  "version": "0.1.0+codex.20260920213135",
   "description": "JEV powered development routing, project context, and safety checks for Codex",
   "author": {
-    "name": "Jev Contributors"
+    "name": "John W. Johnson",
+    "url": "https://github.com/JxWayne890"
   },
+  "homepage": "https://github.com/JxWayne890/jev-control-plane#readme",
+  "repository": "https://github.com/JxWayne890/jev-control-plane",
   "license": "Apache-2.0",
   "keywords": [
     "jev",
@@ -18,7 +21,7 @@
     "displayName": "Jev Control Plane",
     "shortDescription": "Route development work with less wasted reasoning.",
     "longDescription": "Jev Control Plane calls JEV to resolve scope, risk, thread, worktree, model profile, and reasoning decisions, then applies verified local facts and production safety checks before Codex acts.",
-    "developerName": "Jev Contributors",
+    "developerName": "John W. Johnson",
     "category": "Productivity",
     "capabilities": [
       "Project context",

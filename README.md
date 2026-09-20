@@ -1,5 +1,8 @@
 # Jev Control Plane
 
+[![CI](https://github.com/JxWayne890/jev-control-plane/actions/workflows/ci.yml/badge.svg)](https://github.com/JxWayne890/jev-control-plane/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+
 Jev Control Plane is an open source Codex plugin that uses the JEV decision model to route delegated work, then applies verified local facts and fixed safety rules before Codex acts.
 
 It is built for teams that want different tasks to receive different models and reasoning levels without relying on one oversized default. It also keeps scope, repository identity, environment, and production risk visible in every decision.
@@ -50,10 +53,11 @@ The hook script has no third party Python runtime dependencies. Development vali
 
 ## Install
 
-Add this repository as a local marketplace source:
+Add the public GitHub repository as a marketplace source, then install the plugin:
 
 ```bash
-codex plugin marketplace add /absolute/path/to/how-will-the-new-jev-agent
+codex plugin marketplace add JxWayne890/jev-control-plane
+codex plugin add jev-control-plane@jev-control-plane
 ```
 
 Install and enable `jev-control-plane` from the Codex Plugins Directory. Review and trust both bundled hooks. Codex does not automatically trust hooks merely because a plugin is installed.
@@ -124,3 +128,12 @@ Local decision logs contain a SHA 256 prompt digest, not the raw prompt. Logs ro
 ## License
 
 Licensed under the Apache License 2.0. See [LICENSE](LICENSE).
+
+## Creator
+
+Created by John W. Johnson.
+
+1. [GitHub](https://github.com/JxWayne890)
+2. [X](https://x.com/the_JohnWJohnson)
+3. [Instagram](https://www.instagram.com/the_JohnWJohnson/)
+4. [Facebook](https://www.facebook.com/share/19KPAr8VVY/?mibextid=wwXIfr)

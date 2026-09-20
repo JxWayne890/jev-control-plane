@@ -47,7 +47,13 @@
       "Public documentation, license, security policy, contribution guide, and release checklist are present"
     ]
   },
-  "services": {},
+  "services": {
+    "github": {
+      "owner": "JxWayne890",
+      "repository": "jev-control-plane",
+      "expected_login": "JxWayne890"
+    }
+  },
   "environments": {
     "default": "local",
     "production": "production"

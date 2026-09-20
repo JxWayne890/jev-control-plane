@@ -6,7 +6,7 @@ Security fixes are applied to the latest released version.
 
 ## Reporting a vulnerability
 
-Use the private vulnerability reporting feature in the repository Security tab. Do not open a public issue.
+Use the private vulnerability reporting feature in the [repository Security tab](https://github.com/JxWayne890/jev-control-plane/security). Do not open a public issue.
 
 Include:
 
