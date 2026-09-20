@@ -8,6 +8,8 @@ I just released JEV Control Plane, an open source decision and routing layer for
 
 The idea is simple. You should not have to memorize which model and reasoning level is best for every kind of task. Describe the work normally, and JEV Control Plane evaluates the request before recommending how your coding agent should handle it.
 
+The biggest advantage is that the routing decision does not consume the coding agent's reasoning tokens. JEV does not generate text or a chain of thought. It reads the task and returns typed decisions with probabilities, leaving the coding model's reasoning budget available for the actual work.
+
 The current release includes packaged automatic hooks for Codex. Claude Code can use the same local decision engine and JSON router contract through its command and hook workflows. A dedicated Claude Code adapter is also planned to make setup and automatic runtime application even easier.
 
 It considers the complexity of the work, the project scope, repository identity, production risk, reversibility, and whether the task belongs in a new thread or an isolated worktree.
@@ -25,7 +27,7 @@ It currently includes:
 9. Automated tests across macOS and Ubuntu
 10. Full open source documentation under the Apache License 2.0
 
-The selected development model still uses the normal allowance or billing for its host. The point is to automate the routing decision before that work begins, so you do not have to make the same model choice manually every time.
+JEV still reads input tokens, and the selected development model uses the normal allowance or billing for its host once the actual work begins. The important part is that the routing decision itself does not spend the coding agent's reasoning tokens.
 
 This is the first public release, and more updates are coming. I am planning more routing profiles, easier setup, richer visibility into decisions, and broader host support.
 
@@ -43,6 +45,8 @@ I have released JEV Control Plane, an open source decision and routing layer for
 
 Developers should not need to memorize an entire model lineup before assigning a task. JEV Control Plane evaluates the request, project context, and operational risk, then recommends an appropriate runtime profile before work begins.
 
+The routing decision does not consume the coding agent's reasoning tokens. JEV is a System One decision model that returns typed decisions with probabilities instead of generating text or an autoregressive chain of thought. This preserves the coding model's reasoning budget for implementation, debugging, review, and verification.
+
 The current release includes packaged automatic hooks for Codex. Claude Code can use the same local decision engine and JSON router contract through its command and hook workflows, with a dedicated adapter planned for a more direct installation experience.
 
 The first release includes:
@@ -58,7 +62,7 @@ The first release includes:
 9. Configurable model mappings and a deployable private router example
 10. Automated testing on macOS and Ubuntu
 
-This does not make agent execution free. The selected development model still uses the normal allowance or billing for its host, and the configured JEV router may have its own provider cost. The value is that routing happens before work starts, with consistent project and safety controls applied every time.
+JEV still reads input tokens, and the configured router may have its own provider cost. The selected development model also uses the normal allowance or billing for its host once work begins. The value is that model selection and routing happen without spending the coding agent's reasoning tokens, with consistent project and safety controls applied every time.
 
 JEV Control Plane is available now under the Apache License 2.0. More routing profiles, easier setup, richer observability, and broader host support are planned.
 

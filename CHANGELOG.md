@@ -10,6 +10,7 @@ This project follows Semantic Versioning.
 2. Added a complete feature overview and an explicit Codex usage clarification.
 3. Added launch ready Facebook and LinkedIn post drafts.
 4. Broadened the product positioning to cover Codex, Claude Code, and other coding agent workflows while documenting the current adapter boundaries.
+5. Made the no reasoning token routing benefit explicit while clarifying that JEV still reads input tokens and the selected development model retains its normal usage.
 
 ## 0.1.0, 2026-09-20
 

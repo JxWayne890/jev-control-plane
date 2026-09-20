@@ -7,6 +7,8 @@ Describe the task. Let JEV Control Plane choose the runtime for your coding agen
 
 JEV Control Plane is an open source decision and routing layer for AI coding agents, including Codex and Claude Code. It evaluates each request and recommends an appropriate model, reasoning level, execution path, and safety posture before work begins. You do not need to memorize which model is best for quick classification, ordinary implementation, architecture, production work, or critical review.
 
+Most importantly, the routing decision does not consume the coding agent's reasoning tokens. JEV is a System One decision model. It reads the supplied state and returns typed decisions with probabilities instead of generating text or an autoregressive chain of thought. This leaves the coding model's reasoning budget available for the development work itself. See [TypeSafe's introduction to JEV](https://docs.typesafe.ai/introduction) and [the System One announcement](https://typesafe.ai/blog/introducing-system-one-models-and-jev).
+
 The decision considers task complexity, project scope, repository identity, environment, reversibility, and operational risk. Verified local facts and fixed safety rules remain authoritative before the coding agent acts.
 
 ## Why use it
@@ -15,7 +17,7 @@ Choosing a model is part of the work. The right choice can change with the size 
 
 JEV Control Plane delegates that routing decision to AI while preserving deterministic local controls. Small and repeatable tasks can receive a faster runtime. Everyday development can receive a balanced runtime. Complex or sensitive work can receive deeper reasoning and stronger models.
 
-The selected development model still uses the normal allowance or billing for its host. The JEV router may also have its own provider cost. The benefit is automatic routing before delegated work begins, not free execution.
+JEV still reads input tokens, and the router may have its own provider cost. The selected development model also uses the normal allowance or billing for its host after work begins. The benefit is that model selection and routing do not spend the coding agent's reasoning tokens.
 
 ## Features
 
