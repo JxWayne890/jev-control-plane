@@ -10,6 +10,7 @@ This project follows Semantic Versioning.
 2. Routed general Claude Code agents to selected model and effort profiles while preserving specialized agents.
 3. Added read only `doctor` and `recent` commands for setup checks and routing history.
 4. Added Claude Code adapter tests and packaging checks.
+5. Updated GitHub Actions to current Node 24 based majors.
 
 ### Changed
 
