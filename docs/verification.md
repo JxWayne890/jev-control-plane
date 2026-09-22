@@ -1,10 +1,16 @@
 # Verification Report
 
+## Expanded package checks, September 21, 2026
+
+The Codex and Claude Code plugin packages validate locally. The expanded automated suite passes 43 tests. The TypeScript router example type checks. The bundled skill validates. These checks verify hook input and output behavior, not the model actually launched by an installed Claude Code session. Live Claude Code verification remains pending.
+
+## Original Codex runtime check
+
 Date: September 20, 2026
 
 Plugin version: `0.1.0+codex.20260920213135`
 
-Overall result: Passed
+Overall result for Codex version `0.1.0`: Passed. Claude Code live verification is pending.
 
 ## Live runtime matrix
 
@@ -37,14 +43,18 @@ Result: Corrected and covered by regression tests
 
 ## Automated verification
 
-The test suite contains 33 passing tests. Coverage includes runtime mappings, environment overrides, production safety floors, destructive requests, fallback labeling, scope handling, missing manifests, continuation handling, worktree recommendations, delegated create and follow up routing, process level hook behavior, secret redaction, secure endpoint validation, log privacy, log rotation, and unresolved project write blocking.
+The original Codex release passed 33 tests. The expanded suite adds Claude Code model mappings, general and specialized agent behavior, host specific logging, setup checks, and process level hook coverage. Coverage also includes production safety floors, destructive requests, fallback labeling, scope handling, missing manifests, continuation handling, worktree recommendations, delegated Codex routing, secret redaction, secure endpoint validation, log privacy, log rotation, and unresolved project write blocking.
 
-The skill validator and plugin validator passed before this release pass. The final repository check reruns schema validation, tests, compilation, JSON parsing, plugin validation when available, and documentation consistency.
+The skill validator and Codex plugin validator passed before the first release. The updated repository check reruns schema validation, tests, compilation, JSON parsing, Codex packaging validation when available, and documentation consistency. Claude Code plugin and marketplace validation are separate checks.
 
 ## Product boundary
 
 A child task cannot create another generation of tasks unless the user directly authorized that delegation. The routing hook still selects a runtime before the product evaluates that authorization boundary. This is a Codex task authorization rule, not a routing failure.
 
+## Claude Code status
+
+The Claude Code adapter is implemented and its hook behavior is covered by process tests. A live installed Claude Code session still needs to verify actual agent model and effort selection. The adapter preserves specialized agents by design and does not change the parent session model. Do not treat simulated hook output as proof of an actual launched runtime.
+
 ## Conclusion
 
-Jev Control Plane selects different runtime models and reasoning levels for delegated work, reroutes later turns in an existing task, preserves safety floors, records decisions without raw prompts, and falls back explicitly when its decision service is unavailable.
+The original Codex release selected different runtime models and reasoning levels for delegated work, rerouted later turns in an existing task, preserved safety floors, recorded decisions without raw prompts, and fell back explicitly when its decision service was unavailable. The new Claude Code adapter has automated verification, with installed runtime verification still pending.

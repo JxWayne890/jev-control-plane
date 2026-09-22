@@ -66,9 +66,20 @@ export JEV_RUNTIME_MODEL_CRITICAL_REVIEW="gpt-6-astra"
 
 The plugin does not query the host model catalog. A rejected runtime model remains visible in the failed tool call, so operators can update the relevant mapping explicitly.
 
+Claude Code uses its own model aliases. Override them separately:
+
+```bash
+export JEV_CLAUDE_MODEL_RAPID_DECISION="haiku"
+export JEV_CLAUDE_MODEL_BALANCED_BUILD="sonnet"
+export JEV_CLAUDE_MODEL_COMPLEX_BUILD="opus"
+export JEV_CLAUDE_MODEL_CRITICAL_REVIEW="opus"
+```
+
+The selected effort is applied through the bundled `routed-low`, `routed-medium`, or `routed-high` Claude agent. The hook rewrites only a general agent delegation. It preserves specialized agents such as `Explore` and `Plan`, including any model chosen by the caller. The parent session model and effort are not changed. Claude Code may substitute an unavailable model or effort setting, so check the actual launched agent before claiming a runtime result.
+
 ## Decision logs
 
-Codex provides `PLUGIN_DATA` to the plugin. Jev Control Plane writes `decisions.jsonl` there.
+Codex provides `PLUGIN_DATA`. Claude Code provides `CLAUDE_PLUGIN_DATA`. Jev Control Plane writes `decisions.jsonl` in the appropriate host directory.
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
@@ -76,6 +87,8 @@ Codex provides `PLUGIN_DATA` to the plugin. Jev Control Plane writes `decisions.
 | `JEV_DECISION_LOG_BACKUPS` | `3` | Number of rotated files, clamped from 0 through 20 |
 
 Logs include decision metadata and a SHA 256 prompt digest. They do not include raw prompt text.
+
+Run `python3 plugins/jev-control-plane/scripts/jev_control_plane.py recent --limit 10` from the repository after setting the appropriate data directory variable to inspect recent records, or pass `--data-dir /path/to/plugin/data`. The command is read only and does not call JEV. Run `doctor --cwd /path/to/project` to check the manifest, endpoint, token presence, and local Git context without calling JEV or external accounts. The doctor reports only whether a token is present, not its value.
 
 ## Supported environments
 

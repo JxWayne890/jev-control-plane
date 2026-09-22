@@ -67,6 +67,13 @@ def validate_packaging() -> None:
         raise AssertionError("marketplace source does not resolve to the plugin")
 
     hooks = read_json(PLUGIN / "hooks" / "hooks.json")
+    claude_manifest = read_json(PLUGIN / ".claude-plugin" / "plugin.json")
+    if claude_manifest["name"] != manifest["name"]:
+        raise AssertionError("Codex and Claude plugin names differ")
+    if claude_manifest["version"].split("+", 1)[0] != manifest["version"].split("+", 1)[0]:
+        raise AssertionError("Codex and Claude plugin versions differ")
+    if "Agent|Task" not in hooks["hooks"]["PreToolUse"][0]["matcher"]:
+        raise AssertionError("Claude agent hook is missing")
     commands = [
         item["command"]
         for group in hooks["hooks"].values()
@@ -75,6 +82,13 @@ def validate_packaging() -> None:
     ]
     if not commands or not all("scripts/jev_control_plane.py" in item for item in commands):
         raise AssertionError("hook commands do not target the decision router")
+    if not all("CLAUDE_PLUGIN_ROOT" in item and "PLUGIN_ROOT" in item for item in commands):
+        raise AssertionError("hook commands must resolve both plugin hosts")
+    for effort in ("low", "medium", "high"):
+        agent = PLUGIN / "agents" / f"routed-{effort}.md"
+        contents = agent.read_text(encoding="utf-8")
+        if f"name: routed-{effort}" not in contents or f"effort: {effort}" not in contents:
+            raise AssertionError(f"invalid Claude agent: {agent.name}")
 
     required = [
         ROOT / "README.md",
@@ -87,7 +101,7 @@ def validate_packaging() -> None:
     missing = [str(path.relative_to(ROOT)) for path in required if not path.is_file()]
     if missing:
         raise AssertionError(f"missing release files: {', '.join(missing)}")
-    print("valid plugin packaging")
+    print("valid Codex and Claude plugin packaging")
 
 
 def validate_documentation() -> None:

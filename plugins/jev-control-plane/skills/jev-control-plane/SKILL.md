@@ -1,6 +1,6 @@
 ---
 name: jev-control-plane
-description: Resolve client and project context, protect scope, choose thread and model profiles, check production risk, and define verification before Codex changes a website, CRM, or application.
+description: Resolve client and project context, protect scope, choose thread and model profiles, check production risk, and define verification before Codex or Claude Code changes an application.
 ---
 
 # Jev Control Plane
@@ -27,10 +27,14 @@ route is unavailable, it uses the local deterministic fallback and labels that f
 14. Check `provider` and `model` in the injected context. Never describe a local fallback as a JEV decision.
 15. Treat the injected routing fields as authoritative for the current prompt. When the user asks only
     to see or explain the JEV decision, report those values exactly. Do not derive a second decision.
-16. Distinguish the JEV decision model from the Codex runtime model. `typesafe-ai/jev` makes the
-    routing decision. The `runtime_model` field names the Codex model selected for delegated work.
+16. Distinguish the JEV decision model from the host runtime model. `typesafe-ai/jev` makes the
+    routing decision. The `runtime_model` field names the requested model for delegated work.
 17. When creating or continuing another Codex thread, allow the plugin's `PreToolUse` hook to apply
     the delegated runtime. Do not remove or replace the hook supplied `model` or reasoning override.
+18. In Claude Code, ordinary general agent delegations receive a JEV selected model and one of the
+    bundled effort profiles. Specialized agents keep their own type and model and receive context only.
+19. A recommendation to create a new thread or agent does not itself authorize delegation. Follow
+    the user's task scope and the host's delegation policy.
 
 ## Model profiles
 
@@ -41,7 +45,7 @@ route is unavailable, it uses the local deterministic fallback and labels that f
 
 Map profiles to models available in the current host. Do not assume a model is available.
 
-The default delegated runtime mapping is:
+The default Codex delegated runtime mapping is:
 
 1. `rapid_decision` to `gpt-5.6-luna`.
 2. `balanced_build` to `gpt-5.6-terra`.
@@ -51,6 +55,10 @@ The default delegated runtime mapping is:
 JEV's reasoning decision is passed through unchanged. Environment variables named
 `JEV_RUNTIME_MODEL_<PROFILE>` can replace an individual model mapping.
 
+Claude Code maps the same profiles to `haiku`, `sonnet`, `opus`, and `opus`. Environment variables
+named `JEV_CLAUDE_MODEL_<PROFILE>` can replace a Claude model mapping. The parent session is not
+changed by the prompt hook. Check the launched agent before reporting an actual runtime model.
+
 ## Delegated runtime routing
 
 The `UserPromptSubmit` hook can add context but cannot change the model already running the current
@@ -59,9 +67,9 @@ turn. The plugin therefore routes delegated Codex threads at the tool boundary. 
 prompt with JEV, records the decision, adds the routing context to the target prompt, and rewrites
 the tool input with the concrete `model` and reasoning value.
 
-When a user requests concurrent tasks with different complexity, create separate Codex threads.
-Do not perform all assignments in the coordinator thread. After completion, compare each task's
-recorded JEV profile with its directly observed runtime model and reasoning effort.
+When a user explicitly requests concurrent tasks with different complexity, separate delegations
+can test the profiles. After completion, compare each recorded JEV profile with the runtime model
+and effort directly observed in the host. Do not claim that a requested model necessarily ran.
 
 ## Manual preflight
 

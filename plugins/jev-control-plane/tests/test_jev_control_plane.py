@@ -287,6 +287,33 @@ class DecisionTests(unittest.TestCase):
                 "custom-balanced-model",
             )
 
+    def test_claude_models_are_mapped_and_overridable(self):
+        expected = {
+            "rapid_decision": "haiku",
+            "balanced_build": "sonnet",
+            "complex_build": "opus",
+            "critical_review": "opus",
+        }
+        for profile, model in expected.items():
+            with self.subTest(profile=profile):
+                self.assertEqual(MODULE.runtime_model(profile, "claude"), model)
+        with patch.dict(os.environ, {"JEV_CLAUDE_MODEL_BALANCED_BUILD": "custom"}):
+            self.assertEqual(MODULE.runtime_model("balanced_build", "claude"), "custom")
+
+    def test_claude_decision_uses_claude_runtime(self):
+        temporary, root = self.make_project()
+        with temporary:
+            decision = MODULE.decide("Add a contact form", root, host="claude")
+        self.assertEqual(decision["runtime"]["host"], "claude")
+        self.assertEqual(decision["runtime"]["model"], "sonnet")
+
+    def test_codex_plugin_root_takes_precedence_over_compatibility_variable(self):
+        with patch.dict(os.environ, {
+            "PLUGIN_ROOT": "/codex/plugin",
+            "CLAUDE_PLUGIN_ROOT": "/codex/plugin",
+        }):
+            self.assertEqual(MODULE.plugin_host(), "codex")
+
     def test_router_payload_redacts_common_secret_shapes(self):
         temporary, root = self.make_project()
         with temporary:
@@ -325,6 +352,37 @@ class DecisionTests(unittest.TestCase):
         record = json.loads(contents)
         self.assertEqual(len(record["prompt_sha256"]), 64)
 
+    def test_claude_log_directory_and_recent_decisions(self):
+        temporary, root = self.make_project()
+        with temporary, tempfile.TemporaryDirectory() as data_directory:
+            with patch.dict(os.environ, {"CLAUDE_PLUGIN_DATA": data_directory}, clear=True):
+                decision = MODULE.decide("Explain this", root, host="claude")
+                MODULE.record_decision(decision, "Explain this")
+                recent = MODULE.recent_decisions(10)
+        self.assertEqual(len(recent["decisions"]), 1)
+        self.assertEqual(recent["decisions"][0]["runtime"]["host"], "claude")
+        self.assertEqual(recent["summary"]["runtime_model"], {"haiku": 1})
+        self.assertNotIn("Explain this", json.dumps(recent))
+
+    def test_recent_command_accepts_explicit_data_directory(self):
+        with tempfile.TemporaryDirectory() as data_directory:
+            (Path(data_directory) / "decisions.jsonl").write_text(
+                json.dumps({
+                    "decision_provider": "jev",
+                    "model": {"profile": "rapid_decision"},
+                    "runtime": {"model": "haiku"},
+                }) + "\n",
+                encoding="utf-8",
+            )
+            completed = subprocess.run(
+                ["python3", str(SCRIPT), "recent", "--data-dir", data_directory],
+                text=True,
+                capture_output=True,
+                check=True,
+            )
+        report = json.loads(completed.stdout)
+        self.assertEqual(report["summary"]["provider"], {"jev": 1})
+
     def test_decision_log_rotates_at_configured_limit(self):
         temporary, root = self.make_project()
         with temporary, tempfile.TemporaryDirectory() as data_directory:
@@ -358,6 +416,7 @@ class DecisionTests(unittest.TestCase):
         with patch.object(MODULE, "request_jev_decision", return_value=(response, None)):
             routed = MODULE.route_tool_call(payload)
         self.assertIsNotNone(routed)
+        self.assertEqual(routed["hookSpecificOutput"]["permissionDecision"], "allow")
         updated = routed["hookSpecificOutput"]["updatedInput"]
         self.assertEqual(updated["model"], "gpt-5.6-luna")
         self.assertEqual(updated["thinking"], "low")
@@ -385,6 +444,45 @@ class DecisionTests(unittest.TestCase):
         updated = routed["hookSpecificOutput"]["updatedInput"]
         self.assertEqual(updated["model"], "gpt-6-astra")
         self.assertEqual(updated["thinking"], "high")
+
+    def test_claude_generic_agent_routes_model_and_effort(self):
+        response = self.jev_response(
+            modelProfile="balanced_build", reasoningEffort="medium"
+        )
+        payload = {
+            "tool_name": "Agent",
+            "cwd": "/tmp",
+            "tool_input": {
+                "description": "Implement a form",
+                "prompt": "Add a contact form",
+                "subagent_type": "general-purpose",
+            },
+        }
+        with patch.object(MODULE, "request_jev_decision", return_value=(response, None)):
+            routed = MODULE.route_claude_agent_call(payload)
+        output = routed["hookSpecificOutput"]
+        updated = output["updatedInput"]
+        self.assertEqual(updated["model"], "sonnet")
+        self.assertEqual(updated["subagent_type"], "jev-control-plane:routed-medium")
+        self.assertIn("<jev_routing_context>", updated["prompt"])
+        self.assertNotIn("permissionDecision", output)
+
+    def test_claude_specialized_agent_keeps_type_and_model(self):
+        payload = {
+            "tool_name": "Task",
+            "cwd": "/tmp",
+            "tool_input": {
+                "prompt": "Review the migration",
+                "subagent_type": "Explore",
+                "model": "haiku",
+            },
+        }
+        with patch.object(MODULE, "request_jev_decision", return_value=(None, "jev_unavailable")):
+            routed = MODULE.route_claude_agent_call(payload)
+        updated = routed["hookSpecificOutput"]["updatedInput"]
+        self.assertEqual(updated["subagent_type"], "Explore")
+        self.assertEqual(updated["model"], "haiku")
+        self.assertIn("Jev decision context", updated["prompt"])
 
     def test_route_tool_ignores_unrelated_tools(self):
         payload = {
@@ -466,6 +564,58 @@ class DecisionTests(unittest.TestCase):
         self.assertEqual(hook_output["hookEventName"], "UserPromptSubmit")
         self.assertIn("provider=local_fallback", hook_output["additionalContext"])
 
+    def test_shared_hook_command_resolves_each_plugin_root(self):
+        hooks = json.loads((SCRIPT.parents[1] / "hooks" / "hooks.json").read_text())
+        command = hooks["hooks"]["UserPromptSubmit"][0]["hooks"][0]["command"]
+        temporary, root = self.make_project()
+        with temporary:
+            for variable, expected_model in (
+                ("PLUGIN_ROOT", "gpt-5.6-luna"),
+                ("CLAUDE_PLUGIN_ROOT", "haiku"),
+            ):
+                with self.subTest(variable=variable):
+                    environment = dict(os.environ)
+                    for name in ("PLUGIN_ROOT", "CLAUDE_PLUGIN_ROOT"):
+                        environment.pop(name, None)
+                    environment.update({
+                        variable: str(SCRIPT.parents[1]),
+                        "JEV_ROUTER_TOKEN": "",
+                        "JEV_ROUTER_ENDPOINT": "",
+                        "JEV_SETTINGS_FILE": str(root / "missing-settings.json"),
+                    })
+                    completed = subprocess.run(
+                        command,
+                        shell=True,
+                        input=json.dumps({"prompt": "Explain this", "cwd": str(root)}),
+                        text=True,
+                        capture_output=True,
+                        check=True,
+                        env=environment,
+                    )
+                    context = json.loads(completed.stdout)["hookSpecificOutput"]["additionalContext"]
+                    self.assertIn(f"runtime_model={expected_model}", context)
+
+    def test_doctor_reports_readiness_without_exposing_token(self):
+        temporary, root = self.make_project(initialize_git=True)
+        with temporary:
+            environment = dict(os.environ)
+            environment.update({
+                "JEV_ROUTER_ENDPOINT": "https://example.com/api/jev/route",
+                "JEV_ROUTER_TOKEN": "private-doctor-test-token",
+            })
+            completed = subprocess.run(
+                ["python3", str(SCRIPT), "doctor", "--cwd", str(root)],
+                text=True,
+                capture_output=True,
+                check=True,
+                env=environment,
+            )
+        report = json.loads(completed.stdout)
+        self.assertTrue(report["router_endpoint_configured"])
+        self.assertTrue(report["router_token_configured"])
+        self.assertTrue(report["git_repository"])
+        self.assertNotIn("private-doctor-test-token", completed.stdout)
+
     def test_pre_tool_hook_process_rewrites_delegated_runtime(self):
         temporary, root = self.make_project()
         with temporary, tempfile.TemporaryDirectory() as data_directory:
@@ -496,6 +646,37 @@ class DecisionTests(unittest.TestCase):
         self.assertEqual(updated["model"], "gpt-5.6-terra")
         self.assertEqual(updated["thinking"], "medium")
         self.assertIn("<jev_routing_context>", updated["prompt"])
+
+    def test_claude_hook_process_routes_general_agent(self):
+        temporary, root = self.make_project()
+        with temporary, tempfile.TemporaryDirectory() as data_directory:
+            environment = dict(os.environ)
+            environment.update({
+                "CLAUDE_PLUGIN_ROOT": str(SCRIPT.parents[1]),
+                "CLAUDE_PLUGIN_DATA": data_directory,
+                "JEV_ROUTER_TOKEN": "",
+                "JEV_ROUTER_ENDPOINT": "",
+                "JEV_SETTINGS_FILE": str(root / "missing-settings.json"),
+            })
+            completed = subprocess.run(
+                ["python3", str(SCRIPT), "route-tool"],
+                input=json.dumps({
+                    "tool_name": "Agent",
+                    "cwd": str(root),
+                    "tool_input": {
+                        "prompt": "Add a contact form",
+                        "subagent_type": "general-purpose",
+                    },
+                }),
+                text=True,
+                capture_output=True,
+                check=True,
+                env=environment,
+            )
+            updated = json.loads(completed.stdout)["hookSpecificOutput"]["updatedInput"]
+            self.assertTrue((Path(data_directory) / "decisions.jsonl").exists())
+        self.assertEqual(updated["model"], "sonnet")
+        self.assertEqual(updated["subagent_type"], "jev-control-plane:routed-medium")
 
 
 if __name__ == "__main__":

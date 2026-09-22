@@ -1,13 +1,13 @@
 {
-  "description": "Adds Jev routing context and applies model and reasoning choices to delegated Codex threads.",
+  "description": "Adds JEV context and routes delegated Codex threads or Claude Code agents.",
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "^mcp__codex_app__(create_thread|send_message_to_thread)$",
+        "matcher": "^(mcp__codex_app__(create_thread|send_message_to_thread)|Agent|Task)$",
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${PLUGIN_ROOT}/scripts/jev_control_plane.py\" route-tool",
+            "command": "python3 \"${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT}}/scripts/jev_control_plane.py\" route-tool",
             "timeout": 12,
             "additionalContextLimit": 400,
             "statusMessage": "Routing delegated work with JEV"
@@ -20,7 +20,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${PLUGIN_ROOT}/scripts/jev_control_plane.py\" hook",
+            "command": "python3 \"${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT}}/scripts/jev_control_plane.py\" hook",
             "timeout": 12,
             "additionalContextLimit": 1100,
             "statusMessage": "Consulting JEV"

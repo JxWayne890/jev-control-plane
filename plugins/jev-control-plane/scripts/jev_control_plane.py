@@ -66,6 +66,12 @@ RUNTIME_MODEL_DEFAULTS = {
     "complex_build": "gpt-5.6-sol",
     "critical_review": "gpt-6-astra",
 }
+CLAUDE_MODEL_DEFAULTS = {
+    "rapid_decision": "haiku",
+    "balanced_build": "sonnet",
+    "complex_build": "opus",
+    "critical_review": "opus",
+}
 ROUTED_THREAD_TOOLS = {
     "mcp__codex_app__create_thread": ("prompt", "thinking"),
     "mcp__codex_app__send_message_to_thread": ("prompt", "thinking"),
@@ -607,15 +613,18 @@ def apply_jev_decision(
     decision["routing_adjustments"] = adjustments
 
 
-def runtime_model(profile: str) -> str:
-    key = f"JEV_RUNTIME_MODEL_{profile.upper()}"
+def runtime_model(profile: str, host: str = "codex") -> str:
+    prefix = "JEV_CLAUDE_MODEL" if host == "claude" else "JEV_RUNTIME_MODEL"
+    key = f"{prefix}_{profile.upper()}"
     configured = os.environ.get(key, "").strip()
-    return configured or RUNTIME_MODEL_DEFAULTS[profile]
+    defaults = CLAUDE_MODEL_DEFAULTS if host == "claude" else RUNTIME_MODEL_DEFAULTS
+    return configured or defaults[profile]
 
 
-def apply_runtime_route(decision: dict[str, Any]) -> None:
+def apply_runtime_route(decision: dict[str, Any], host: str = "codex") -> None:
     decision["runtime"] = {
-        "model": runtime_model(decision["model"]["profile"]),
+        "host": host,
+        "model": runtime_model(decision["model"]["profile"], host),
         "reasoning_effort": decision["model"]["reasoning_effort"],
     }
 
@@ -625,6 +634,7 @@ def decide(
     cwd: Path,
     live: bool = False,
     use_jev: bool = False,
+    host: str = "codex",
 ) -> dict[str, Any]:
     config, config_path, warnings = load_config(cwd)
     git = git_context(cwd)
@@ -695,7 +705,7 @@ def decide(
             decision["warnings"].append(error)
     if live:
         decision["identity_checks"] = live_identity_checks(config, cwd)
-    apply_runtime_route(decision)
+    apply_runtime_route(decision, host)
     return decision
 
 
@@ -726,10 +736,9 @@ def rotate_decision_log(path: Path, incoming_bytes: int) -> None:
 
 
 def record_decision(decision: dict[str, Any], prompt: str) -> None:
-    data_dir = os.environ.get("PLUGIN_DATA")
-    if not data_dir:
+    path = log_directory()
+    if path is None:
         return
-    path = Path(data_dir)
     path.mkdir(parents=True, exist_ok=True)
     record = dict(decision)
     record["prompt_sha256"] = hashlib.sha256(prompt.encode("utf-8")).hexdigest()
@@ -814,6 +823,108 @@ def route_tool_call(payload: dict[str, Any]) -> dict[str, Any] | None:
     }
 
 
+def route_claude_agent_call(payload: dict[str, Any]) -> dict[str, Any] | None:
+    if payload.get("tool_name") not in {"Agent", "Task"}:
+        return None
+    tool_input = payload.get("tool_input")
+    if not isinstance(tool_input, dict):
+        return None
+    prompt = tool_input.get("prompt")
+    if not isinstance(prompt, str) or not prompt.strip():
+        return None
+    cwd = Path(payload.get("cwd") or os.getcwd())
+    decision = decide(prompt, cwd, use_jev=True, host="claude")
+    record_decision(decision, prompt)
+    updated = dict(tool_input)
+    updated["prompt"] = routed_prompt(prompt, decision)
+    agent_type = tool_input.get("subagent_type")
+    generic = agent_type in {"general-purpose", "general_purpose"}
+    if generic:
+        effort = decision["runtime"]["reasoning_effort"]
+        updated["subagent_type"] = f"jev-control-plane:routed-{effort}"
+        updated["model"] = decision["runtime"]["model"]
+        status = "JEV applied Claude model and effort to a general agent"
+    else:
+        status = "JEV preserved the specialized Claude agent and added context only"
+    return {
+        "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "updatedInput": updated,
+            "additionalContext": status,
+        }
+    }
+
+
+def plugin_host() -> str:
+    if os.environ.get("PLUGIN_ROOT"):
+        return "codex"
+    return "claude" if os.environ.get("CLAUDE_PLUGIN_ROOT") else "codex"
+
+
+def log_directory() -> Path | None:
+    if plugin_host() == "claude":
+        value = os.environ.get("CLAUDE_PLUGIN_DATA") or os.environ.get("PLUGIN_DATA")
+    else:
+        value = os.environ.get("PLUGIN_DATA") or os.environ.get("CLAUDE_PLUGIN_DATA")
+    return Path(value).expanduser() if value else None
+
+
+def recent_decisions(limit: int, directory: Path | None = None) -> dict[str, Any]:
+    directory = directory or log_directory()
+    if directory is None:
+        return {
+            "data_directory": None,
+            "decisions": [],
+            "summary": {"provider": {}, "profile": {}, "runtime_model": {}},
+            "warning": "plugin_data_unavailable",
+        }
+    path = directory / "decisions.jsonl"
+    records: list[dict[str, Any]] = []
+    try:
+        with path.open(encoding="utf-8") as handle:
+            for line in handle:
+                try:
+                    record = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                if isinstance(record, dict):
+                    records.append(record)
+                    records = records[-limit:]
+    except FileNotFoundError:
+        pass
+    summary: dict[str, dict[str, int]] = {
+        "provider": {}, "profile": {}, "runtime_model": {},
+    }
+    for record in records:
+        model = record.get("model") if isinstance(record.get("model"), dict) else {}
+        runtime = record.get("runtime") if isinstance(record.get("runtime"), dict) else {}
+        values = {
+            "provider": record.get("decision_provider"),
+            "profile": model.get("profile"),
+            "runtime_model": runtime.get("model"),
+        }
+        for category, value in values.items():
+            if isinstance(value, str):
+                summary[category][value] = summary[category].get(value, 0) + 1
+    return {"data_directory": str(directory), "decisions": records, "summary": summary}
+
+
+def installation_doctor(cwd: Path) -> dict[str, Any]:
+    config, path, warnings = load_config(cwd)
+    endpoint = router_endpoint()
+    return {
+        "python_supported": sys.version_info >= (3, 10),
+        "project_manifest": str(path) if config else None,
+        "project_warnings": warnings,
+        "router_endpoint_configured": endpoint is not None,
+        "router_token_configured": router_token(cwd) is not None,
+        "git_repository": git_context(cwd).get("repository", False),
+        "decision_log_directory": str(log_directory()) if log_directory() else None,
+        "codex_plugin_root": bool(os.environ.get("PLUGIN_ROOT")),
+        "claude_plugin_root": bool(os.environ.get("CLAUDE_PLUGIN_ROOT")),
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Jev Control Plane local decision router")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -822,7 +933,13 @@ def main() -> int:
     decide_parser = subparsers.add_parser("decide")
     decide_parser.add_argument("--prompt", required=True)
     decide_parser.add_argument("--cwd", default=os.getcwd())
+    decide_parser.add_argument("--host", choices=("codex", "claude"), default="codex")
     decide_parser.add_argument("--json", action="store_true")
+    doctor_parser = subparsers.add_parser("doctor")
+    doctor_parser.add_argument("--cwd", default=os.getcwd())
+    recent_parser = subparsers.add_parser("recent")
+    recent_parser.add_argument("--limit", type=int, default=10)
+    recent_parser.add_argument("--data-dir")
     preflight_parser = subparsers.add_parser("preflight")
     preflight_parser.add_argument("--cwd", default=os.getcwd())
     preflight_parser.add_argument(
@@ -839,7 +956,7 @@ def main() -> int:
             return 0
         prompt = str(payload.get("prompt", ""))
         cwd = Path(payload.get("cwd") or os.getcwd())
-        decision = decide(prompt, cwd, use_jev=True)
+        decision = decide(prompt, cwd, use_jev=True, host=plugin_host())
         record_decision(decision, prompt)
         print(json.dumps({
             "hookSpecificOutput": {
@@ -854,14 +971,33 @@ def main() -> int:
             payload = json.load(sys.stdin)
         except json.JSONDecodeError:
             return 0
-        routed = route_tool_call(payload)
+        routed = (
+            route_claude_agent_call(payload)
+            if plugin_host() == "claude" and payload.get("tool_name") in {"Agent", "Task"}
+            else route_tool_call(payload)
+        )
         if routed is not None:
             print(json.dumps(routed))
         return 0
 
     if args.command == "decide":
-        decision = decide(args.prompt, Path(args.cwd), use_jev=True)
+        decision = decide(args.prompt, Path(args.cwd), use_jev=True, host=args.host)
         print(json.dumps(decision, indent=2) if args.json else hook_context(decision))
+        return 0
+
+    if args.command == "doctor":
+        report = installation_doctor(Path(args.cwd))
+        print(json.dumps(report, indent=2))
+        return 0 if all((
+            report["python_supported"],
+            report["project_manifest"],
+            report["router_endpoint_configured"],
+            report["router_token_configured"],
+        )) else 1
+
+    if args.command == "recent":
+        directory = Path(args.data_dir).expanduser() if args.data_dir else None
+        print(json.dumps(recent_decisions(min(max(args.limit, 1), 100), directory), indent=2))
         return 0
 
     decision = decide(args.prompt, Path(args.cwd), live=True)

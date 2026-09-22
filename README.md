@@ -26,8 +26,8 @@ JEV still reads input tokens, and the router may have its own provider cost. The
 1. Evaluates each request before delegated work begins.
 2. Selects a runtime profile based on complexity, risk, scope, and execution requirements.
 3. Selects both the runtime model and reasoning effort.
-4. Applies the decision directly to new delegated threads.
-5. Applies updated routing decisions to follow up messages sent to existing threads.
+4. Applies the decision to new delegated Codex threads and general Claude Code agents.
+5. Applies updated routing decisions to follow up messages sent to existing Codex threads.
 6. Supports configurable model mappings for every routing profile.
 
 ### Project aware decisions
@@ -59,19 +59,19 @@ JEV still reads input tokens, and the router may have its own provider cost. The
 
 ### Tested and open
 
-1. Includes 33 automated tests for routing, safety, fallback behavior, privacy, model mappings, endpoint security, and hook behavior.
+1. Includes automated tests for routing, safety, fallback behavior, privacy, model mappings, endpoint security, and hooks for both hosts.
 2. Runs continuous integration on macOS and Ubuntu with Python 3.10 and Python 3.12.
 3. Type checks the included TypeScript router.
 4. Includes formal schemas, configuration guidance, a security model, and a verification report.
 5. Is open source under the Apache License 2.0.
 
-More routing profiles, easier setup, richer visibility, and broader host support are planned for future updates.
+The `doctor` and `recent` commands make setup and decision history easier to inspect. Additional hosts and routing controls can be added in future updates.
 
 ## Agent support
 
 The decision engine is agent independent and is available through a local command interface and a documented JSON router contract. It can be invoked from Codex, Claude Code, or another agent environment.
 
-This repository currently bundles the deepest automation for Codex. Its hooks inject decision context and apply the selected runtime when Codex creates or continues delegated threads. Claude Code can call the same decision engine from its command and hook workflows. A dedicated Claude Code adapter is planned to make installation and automatic runtime application as direct as the bundled Codex experience.
+This repository packages plugins for both Codex and Claude Code. The same hook file and decision engine serve both hosts. Codex applies the selected model and reasoning effort to delegated thread creation and follow up messages. The Claude Code adapter rewrites ordinary general agent calls to request the selected model and effort through three bundled agent definitions. Specialized Claude agents keep their own type and model, and receive routing context only.
 
 ## What it does
 
@@ -80,9 +80,9 @@ For Codex, JEV Control Plane provides two complementary hooks:
 1. `UserPromptSubmit` adds a compact decision packet to the current turn. It reports the decision provider, JEV model, scope, risk, thread recommendation, worktree recommendation, model profile, reasoning level, confirmation state, and external write state.
 2. `PreToolUse` intercepts delegated `create_thread` and `send_message_to_thread` calls. It places the selected runtime model and reasoning level directly into the tool input before that child turn begins.
 
-The current Codex turn has already selected its runtime before `UserPromptSubmit` runs. The plugin therefore reports guidance for the current turn and enforces runtime routing on delegated turns.
+In Claude Code, `UserPromptSubmit` also injects the decision packet. `PreToolUse` routes general `Agent` and legacy `Task` calls. The active parent session model has already been selected before the prompt hook runs. Neither host changes that current model through this hook.
 
-## Routing defaults
+## Codex routing defaults
 
 | Profile | Runtime model | Reasoning | Typical work |
 | --- | --- | --- | --- |
@@ -92,6 +92,17 @@ The current Codex turn has already selected its runtime before `UserPromptSubmit
 | `critical_review` | `gpt-6-astra` | high | Production, billing, security, and destructive work |
 
 Every runtime mapping can be overridden with an environment variable. See [configuration](docs/configuration.md).
+
+## Claude Code routing defaults
+
+| Profile | Agent model | Effort |
+| --- | --- | --- |
+| `rapid_decision` | `haiku` | low |
+| `balanced_build` | `sonnet` | medium |
+| `complex_build` | `opus` | high |
+| `critical_review` | `opus` | high |
+
+The model can be overridden per profile with `JEV_CLAUDE_MODEL_<PROFILE>`. Effort is selected by a bundled general agent definition. The requested model and effort can still be subject to host availability or substitution. Specialized Claude agents are not changed automatically.
 
 ## Safety model
 
@@ -110,14 +121,14 @@ The plugin:
 
 ## Requirements
 
-1. Codex with plugin and hook support.
+1. Codex or Claude Code with plugin and hook support.
 2. Python 3.10 or newer.
 3. A private HTTPS router endpoint backed by `typesafe-ai/jev`.
 4. A shared bearer token for the router endpoint.
 
 The hook script has no third party Python runtime dependencies. Development validation uses the packages listed in `requirements-dev.txt`.
 
-## Install
+## Install for Codex
 
 Add the public GitHub repository as a marketplace source, then install the plugin:
 
@@ -148,6 +159,17 @@ On macOS, `JEV_ROUTER_TOKEN` can instead be stored in Keychain under the service
 
 A drop in Vercel route example is included at [plugins/jev-control-plane/examples/vercel-router](plugins/jev-control-plane/examples/vercel-router).
 
+## Install for Claude Code
+
+Add the repository as a Claude Code marketplace, then install the plugin:
+
+```bash
+claude plugin marketplace add JxWayne890/jev-control-plane
+claude plugin install jev-control-plane@jev-control-plane
+```
+
+Use the same project manifest and router settings shown above. Review the bundled hooks before enabling the plugin. Claude Code requires a version that supports `PreToolUse` input updates and agent effort settings. See [configuration](docs/configuration.md) for the exact host limits and local checks.
+
 ## Verify the installation
 
 Run a local decision:
@@ -157,6 +179,20 @@ python3 plugins/jev-control-plane/scripts/jev_control_plane.py decide \
   --prompt "Add a contact form" \
   --cwd /path/to/project \
   --json
+```
+
+Check local configuration without calling the router or accessing an external account:
+
+```bash
+python3 plugins/jev-control-plane/scripts/jev_control_plane.py doctor --cwd /path/to/project
+```
+
+Inspect recent decision metadata from the host supplied plugin data directory:
+
+```bash
+python3 plugins/jev-control-plane/scripts/jev_control_plane.py recent \
+  --data-dir /path/to/plugin/data \
+  --limit 10
 ```
 
 Run the repository checks:
@@ -174,11 +210,13 @@ Create four separate Codex threads. Give each thread exactly one task. First, cl
 
 The expected profiles are `rapid_decision`, `balanced_build`, `complex_build`, and `critical_review`. Runtime model availability still depends on the Codex host. Override a mapping if a default model is unavailable.
 
+For Claude Code, ask it to delegate a simple classification task, an ordinary implementation task, and a sensitive review to general agents. The `PreToolUse` hook routes each general agent. Inspect the task list and recent decisions to compare the requested runtime with what the host actually launched.
+
 ## Privacy
 
 Prompt text and compact project context are sent to the endpoint you configure. The plugin performs best effort redaction for common secret formats before sending that request. This is not a substitute for keeping credentials out of prompts and project manifests.
 
-Local decision logs contain a SHA 256 prompt digest, not the raw prompt. Logs rotate by size and remain in the plugin data directory. See [security model](docs/security-model.md) for the full trust boundary.
+Local decision logs contain a SHA 256 prompt digest, not the raw prompt. Logs rotate by size and remain in the host supplied plugin data directory. See [security model](docs/security-model.md) for the full trust boundary.
 
 ## Documentation
 

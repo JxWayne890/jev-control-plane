@@ -1,6 +1,6 @@
 # Launch Posts
 
-These drafts describe the current `v0.1.0` release. Update the release number if they are reused for a later version.
+These drafts describe the current repository. Confirm the installed Claude Code runtime before claiming a live Claude Code routing result.
 
 ## Facebook
 
@@ -10,7 +10,7 @@ The idea is simple. You should not have to memorize which model and reasoning le
 
 The biggest advantage is that the routing decision does not consume the coding agent's reasoning tokens. JEV does not generate text or a chain of thought. It reads the task and returns typed decisions with probabilities, leaving the coding model's reasoning budget available for the actual work.
 
-The current release includes packaged automatic hooks for Codex. Claude Code can use the same local decision engine and JSON router contract through its command and hook workflows. A dedicated Claude Code adapter is also planned to make setup and automatic runtime application even easier.
+The repository now includes packaged hooks for Codex and Claude Code. Codex routes delegated threads. The Claude Code adapter is designed to route general agents while preserving specialized agents. The active parent session model stays under the host's control.
 
 It considers the complexity of the work, the project scope, repository identity, production risk, reversibility, and whether the task belongs in a new thread or an isolated worktree.
 
@@ -26,16 +26,14 @@ It currently includes:
 8. Secret redaction, private authenticated routing, and privacy conscious audit logs
 9. Automated tests across macOS and Ubuntu
 10. Full open source documentation under the Apache License 2.0
+11. Local setup checks and a command for inspecting recent routing decisions
 
 JEV still reads input tokens, and the selected development model uses the normal allowance or billing for its host once the actual work begins. The important part is that the routing decision itself does not spend the coding agent's reasoning tokens.
 
-This is the first public release, and more updates are coming. I am planning more routing profiles, easier setup, richer visibility into decisions, and broader host support.
+More updates are coming, including broader host support and more control over routing profiles.
 
 Repository:
 https://github.com/JxWayne890/jev-control-plane
-
-Release:
-https://github.com/JxWayne890/jev-control-plane/releases/tag/v0.1.0
 
 If you try it, I would genuinely like to hear what worked, what did not, and what you want it to route next.
 
@@ -47,9 +45,9 @@ Developers should not need to memorize an entire model lineup before assigning a
 
 The routing decision does not consume the coding agent's reasoning tokens. JEV is a System One decision model that returns typed decisions with probabilities instead of generating text or an autoregressive chain of thought. This preserves the coding model's reasoning budget for implementation, debugging, review, and verification.
 
-The current release includes packaged automatic hooks for Codex. Claude Code can use the same local decision engine and JSON router contract through its command and hook workflows, with a dedicated adapter planned for a more direct installation experience.
+The repository now includes packaged hooks for Codex and Claude Code. Codex applies routing to delegated threads. The Claude Code adapter is designed to route general agents while preserving specialized agents. The active parent session model remains controlled by the host.
 
-The first release includes:
+The repository includes:
 
 1. Automatic model and reasoning decisions for coding agents
 2. Runtime profiles for rapid decisions, balanced implementation, complex development, and critical review
@@ -61,16 +59,14 @@ The first release includes:
 8. Credential redaction and privacy conscious audit logs
 9. Configurable model mappings and a deployable private router example
 10. Automated testing on macOS and Ubuntu
+11. Local setup checks and decision history inspection
 
 JEV still reads input tokens, and the configured router may have its own provider cost. The selected development model also uses the normal allowance or billing for its host once work begins. The value is that model selection and routing happen without spending the coding agent's reasoning tokens, with consistent project and safety controls applied every time.
 
-JEV Control Plane is available now under the Apache License 2.0. More routing profiles, easier setup, richer observability, and broader host support are planned.
+JEV Control Plane is available under the Apache License 2.0. More routing profiles and broader host support are planned.
 
 Repository:
 https://github.com/JxWayne890/jev-control-plane
-
-Release:
-https://github.com/JxWayne890/jev-control-plane/releases/tag/v0.1.0
 
 Feedback and contributions are welcome.
 

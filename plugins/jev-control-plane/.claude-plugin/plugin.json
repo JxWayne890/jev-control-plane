@@ -1,0 +1,13 @@
+{
+  "name": "jev-control-plane",
+  "version": "0.2.0",
+  "description": "JEV routing, project context, and safety checks for Claude Code",
+  "author": {
+    "name": "John W. Johnson",
+    "url": "https://github.com/JxWayne890"
+  },
+  "homepage": "https://github.com/JxWayne890/jev-control-plane#readme",
+  "repository": "https://github.com/JxWayne890/jev-control-plane",
+  "license": "Apache-2.0",
+  "keywords": ["jev", "routing", "claude-code", "safety"]
+}

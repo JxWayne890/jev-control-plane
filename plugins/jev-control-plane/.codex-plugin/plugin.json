@@ -1,6 +1,6 @@
 {
   "name": "jev-control-plane",
-  "version": "0.1.0+codex.20260920213135",
+  "version": "0.2.0+codex.20260922030458",
   "description": "JEV powered development routing, project context, and safety checks for Codex",
   "author": {
     "name": "John W. Johnson",

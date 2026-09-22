@@ -1,0 +1,16 @@
+{
+  "name": "jev-control-plane",
+  "owner": {
+    "name": "John W. Johnson"
+  },
+  "metadata": {
+    "description": "JEV routing tools for coding agents"
+  },
+  "plugins": [
+    {
+      "name": "jev-control-plane",
+      "source": "./plugins/jev-control-plane",
+      "description": "JEV routing, project context, and safety checks for Claude Code"
+    }
+  ]
+}

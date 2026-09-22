@@ -4,6 +4,13 @@ This project follows Semantic Versioning.
 
 ## Unreleased
 
+### Added
+
+1. Packaged Claude Code plugin and marketplace support using the shared decision engine and hooks.
+2. Routed general Claude Code agents to selected model and effort profiles while preserving specialized agents.
+3. Added read only `doctor` and `recent` commands for setup checks and routing history.
+4. Added Claude Code adapter tests and packaging checks.
+
 ### Changed
 
 1. Reframed the README around automatic runtime selection and the user problem it solves.
@@ -11,6 +18,7 @@ This project follows Semantic Versioning.
 3. Added launch ready Facebook and LinkedIn post drafts.
 4. Broadened the product positioning to cover Codex, Claude Code, and other coding agent workflows while documenting the current adapter boundaries.
 5. Made the no reasoning token routing benefit explicit while clarifying that JEV still reads input tokens and the selected development model retains its normal usage.
+6. Preserved the Codex permission field required for input rewriting while leaving Claude Code permission prompts unchanged.
 
 ## 0.1.0, 2026-09-20
 

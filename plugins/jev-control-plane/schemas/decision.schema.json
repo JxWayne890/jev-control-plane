@@ -52,6 +52,7 @@
       "type": "object",
       "required": ["model", "reasoning_effort"],
       "properties": {
+        "host": {"enum": ["codex", "claude"]},
         "model": {"type": "string"},
         "reasoning_effort": {"enum": ["low", "medium", "high"]}
       }
