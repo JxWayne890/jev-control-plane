@@ -1,0 +1,12 @@
+{
+  "id": "personal-project",
+  "name": "Personal project",
+  "description": "Start in shadow mode and review recommendations before enabling routing.",
+  "changes": {
+    "routing": {"mode": "shadow"},
+    "policy": {
+      "production_requires_confirmation": true,
+      "destructive_actions": "block_without_explicit_request"
+    }
+  }
+}

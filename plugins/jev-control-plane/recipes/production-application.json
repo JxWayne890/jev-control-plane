@@ -1,0 +1,12 @@
+{
+  "id": "production-application",
+  "name": "Production application",
+  "description": "Observe decisions first for a production application. Explicit approval is still required for sensitive changes.",
+  "changes": {
+    "routing": {"mode": "shadow"},
+    "policy": {
+      "production_requires_confirmation": true,
+      "destructive_actions": "block_without_explicit_request"
+    }
+  }
+}

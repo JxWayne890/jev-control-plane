@@ -1,0 +1,7 @@
+{
+  "id": "example-agent",
+  "tool_names": ["spawn_agent", "continue_agent"],
+  "prompt_field": "prompt",
+  "model_field": "model",
+  "reasoning_field": "reasoning_effort"
+}

@@ -6,11 +6,17 @@ This project follows Semantic Versioning.
 
 ### Added
 
-1. Packaged Claude Code plugin and marketplace support using the shared decision engine and hooks.
-2. Routed general Claude Code agents to selected model and effort profiles while preserving specialized agents.
-3. Added read only `doctor` and `recent` commands for setup checks and routing history.
-4. Added Claude Code adapter tests and packaging checks.
-5. Updated GitHub Actions to current Node 24 based majors.
+1. Added a local dashboard with decision history, a routing test lab, model mappings, safety context, results, and handoff export.
+2. Added shadow mode so delegated routing can be observed without rewriting host tool input.
+3. Added portable context packets, policy recipes, and a community adapter contract.
+4. Added local pull request advice and a read only GitHub Actions summary workflow.
+5. Added product tests, dashboard usage guidance, and screenshots.
+
+6. Packaged Claude Code plugin and marketplace support using the shared decision engine and hooks.
+7. Routed general Claude Code agents to selected model and effort profiles while preserving specialized agents.
+8. Added read only `doctor` and `recent` commands for setup checks and routing history.
+9. Added Claude Code adapter tests and packaging checks.
+10. Updated GitHub Actions to current Node 24 based majors.
 
 ### Changed
 

@@ -1,5 +1,13 @@
 # Verification Report
 
+## Dashboard and workflow build, current working tree
+
+The local repository check passes 53 automated tests. New coverage includes shadow mode for both hosts, sanitized handoff packets, guarded policy recipes, model mapping edits, adapter validation, local Git pull request advice, scoped account checks, and dashboard API boundaries. Python modules compile and the dashboard JavaScript passes `node --check`.
+
+The dashboard was opened in a real browser at desktop and mobile widths. The overview, decision explorer, test lab, model controls, and project safety views rendered without browser console errors. Five screenshots in `docs/images` were captured from the running interface. The test lab screenshot shows a local rules preview and did not call the remote JEV router or execute the task.
+
+This is local verification. GitHub Actions has not yet run on these changes, and a live installed Claude Code runtime check remains pending. The dashboard shows requested runtimes, not proof of the model the host actually launched.
+
 ## Expanded package checks, September 21, 2026
 
 The Codex and Claude Code plugin packages validate locally. The expanded automated suite passes 43 tests. The TypeScript router example type checks. The bundled skill validates. These checks verify hook input and output behavior, not the model actually launched by an installed Claude Code session. Live Claude Code verification remains pending.
@@ -29,7 +37,7 @@ Result: Passed
 
 ## Safety downgrade resistance
 
-The critical safety prompt explicitly requested the cheapest model and low reasoning. JEV retained `critical_review`, selected `gpt-6-astra`, required high reasoning, required confirmation, and blocked external writes.
+The critical safety prompt explicitly requested the cheapest model and low reasoning. JEV retained `critical_review`, selected `gpt-6-astra`, required high reasoning, required confirmation, and marked external writes as blocked in the decision context.
 
 Result: Passed
 

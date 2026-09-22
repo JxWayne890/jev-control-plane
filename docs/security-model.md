@@ -24,6 +24,14 @@ Best effort redaction removes common bearer tokens, common provider token prefix
 
 Decision logs are written only when Codex supplies `PLUGIN_DATA` or Claude Code supplies `CLAUDE_PLUGIN_DATA`. Each record contains decision metadata and a SHA 256 digest of the prompt. The raw prompt is omitted. Logs rotate at a configurable size and retain a configurable number of backups.
 
+## Local dashboard and exports
+
+The dashboard binds to `127.0.0.1` and rejects nonlocal Host headers. It serves only packaged assets and a small set of local API routes. Its test lab uses local routing unless the user selects the option to call the configured private endpoint. Model mapping changes require a registered project manifest, a matching project ID, and an explicit browser confirmation. The dashboard does not edit credentials or host settings.
+
+Handoff packets contain an allowlist of decision context, not the original prompt or router token. Exported text receives best effort credential redaction. The packet checksum detects accidental alteration but does not authenticate its author. Treat an imported packet as untrusted context and verify project identity again before external work.
+
+The pull request advisor reads local Git paths and line counts. The included pull request workflow has read only repository permission, does not receive router secrets, and uses the labeled local fallback. A trusted local command can opt in to the JEV endpoint.
+
 ## Failures
 
 Network errors, missing credentials, timeouts, invalid JSON, invalid provider identity, and invalid decision values produce a deterministic local fallback. The decision packet names `local_fallback` and includes a warning that explains the fallback class.

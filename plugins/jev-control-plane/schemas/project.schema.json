@@ -55,6 +55,33 @@
         "production_requires_confirmation": {"type": "boolean"},
         "destructive_actions": {"type": "string"}
       }
+    },
+    "routing": {
+      "type": "object",
+      "properties": {
+        "mode": {"type": "string", "enum": ["active", "shadow"]}
+      },
+      "additionalProperties": false
+    },
+    "runtime_models": {
+      "type": "object",
+      "properties": {
+        "codex": {"$ref": "#/$defs/modelMap"},
+        "claude": {"$ref": "#/$defs/modelMap"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "modelMap": {
+      "type": "object",
+      "properties": {
+        "rapid_decision": {"type": "string", "minLength": 1},
+        "balanced_build": {"type": "string", "minLength": 1},
+        "complex_build": {"type": "string", "minLength": 1},
+        "critical_review": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
     }
   }
 }

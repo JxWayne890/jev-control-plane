@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>JEV Control Plane</title>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/bars.css">
+  <link rel="stylesheet" href="/model-controls.css">
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-mark">J</span><span><strong>JEV</strong><small>CONTROL PLANE</small></span></div>
+      <div class="nav-label">WORKSPACE</div>
+      <nav aria-label="Dashboard sections">
+        <button class="nav-item active" data-view="overview"><span class="nav-icon">◫</span>Overview</button>
+        <button class="nav-item" data-view="decisions"><span class="nav-icon">≡</span>Decisions</button>
+        <button class="nav-item" data-view="lab"><span class="nav-icon">◇</span>Test lab</button>
+        <button class="nav-item" data-view="models"><span class="nav-icon">▦</span>Model controls</button>
+        <button class="nav-item" data-view="projects"><span class="nav-icon">▣</span>Project and safety</button>
+        <button class="nav-item" data-view="results"><span class="nav-icon">◉</span>Results</button>
+        <button class="nav-item" data-view="handoff"><span class="nav-icon">↗</span>Handoffs</button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="sidebar-help"><span class="spark">✧</span><strong>Clear decisions. Safer work.</strong><p>Local visibility into how your agent is routed.</p></div>
+        <div class="sidebar-footer">JEV Control Plane <span>Open source</span></div>
+      </div>
+    </aside>
+    <main class="main">
+      <header class="topbar"><div class="crumb">WORKSPACE <span>/</span> <b id="crumb-name">Overview</b></div><div class="top-actions"><span id="demo-label" class="demo-label" hidden>SAMPLE DATA</span><span class="local-label"><i></i> LOCAL DASHBOARD</span></div></header>
+      <div class="content">
+        <section id="view-overview" class="view active">
+          <div class="page-head"><div><div class="eyebrow">YOUR ROUTING WORKSPACE</div><h1>Good decisions, before the work begins.</h1><p>See what JEV recommended, what was applied, and where safety rules stepped in.</p></div><button id="refresh-button" class="button secondary">↻ &nbsp; Refresh data</button></div>
+          <div id="banner" class="notice" hidden></div>
+          <div class="metrics" id="overview-metrics"></div>
+          <div class="two-column"><section class="panel"><div class="panel-head"><div><h2>Recent decisions</h2><p>A clear trail of each routing recommendation</p></div><button class="text-link" data-go="decisions">View all →</button></div><div id="recent-list" class="decision-list"></div></section><section class="panel"><div class="panel-head"><div><h2>Routing breakdown</h2><p>Profile choices in the current log window</p></div></div><div id="profile-bars" class="profile-bars"></div><div class="panel-note">Counts are based on recorded decisions, not estimates.</div></section></div>
+          <div class="bottom-grid"><div class="info-tile"><span class="tile-icon violet">◇</span><div><h3>Try a decision</h3><p>Preview a route without starting agent work.</p><button class="text-link" data-go="lab">Open test lab →</button></div></div><div class="info-tile"><span class="tile-icon green">▣</span><div><h3>Safety stays local</h3><p>Verified project facts and fixed risk floors stay in control.</p><button class="text-link" data-go="projects">Review policy →</button></div></div></div>
+        </section>
+        <section id="view-decisions" class="view"><div class="page-head"><div><div class="eyebrow">AUDIT TRAIL</div><h1>Decision explorer</h1><p>Inspect the recommendation, route status, and safety outcome of every recorded decision.</p></div></div><div class="two-column explorer"><section class="panel"><div class="panel-head"><div><h2>Decision history</h2><p>Raw prompts are never stored in this log.</p></div></div><div id="history-list" class="decision-list"></div></section><section class="panel detail-panel"><div class="panel-head"><div><h2>Decision details</h2><p>Choose a decision to inspect its fields.</p></div></div><div id="decision-detail" class="detail-content empty-state">Select a decision on the left.</div></section></div></section>
+        <section id="view-lab" class="view"><div class="page-head"><div><div class="eyebrow">SAFE TO EXPLORE</div><h1>Test lab</h1><p>See how JEV would route a task. This preview does not create a thread or change a model.</p></div></div><div class="two-column lab-grid"><section class="panel form-panel"><div class="panel-head"><div><h2>Describe a task</h2><p>Use a real scenario, but never paste credentials.</p></div></div><form id="lab-form"><label for="lab-prompt">TASK PROMPT</label><textarea id="lab-prompt" rows="8" maxlength="12000" placeholder="For example: Review a production database migration and recommend a safe verification plan."></textarea><div class="form-row"><div><label for="lab-host">AGENT HOST</label><select id="lab-host"><option value="codex">Codex</option><option value="claude">Claude Code</option></select></div><label class="checkbox"><input id="lab-use-jev" type="checkbox">Call configured JEV router</label></div><p class="field-note">Leaving the router option off uses the labeled local rules engine. Turning it on sends redacted task context to your configured endpoint.</p><button class="button primary" type="submit">Preview decision <span>→</span></button></form></section><section class="panel result-panel"><div class="panel-head"><div><h2>Route preview</h2><p>Recommendation and safety state will appear here.</p></div></div><div id="lab-result" class="empty-state result-empty"><span>◇</span><h3>Ready when you are</h3><p>Enter a task and preview the decision.</p></div></section></div></section>
+        <section id="view-models" class="view"><div class="page-head"><div><div class="eyebrow">RUNTIME MAPPINGS</div><h1>Model controls</h1><p>Inspect and update the model each profile requests in Codex and Claude Code.</p></div></div><div class="panel"><div class="panel-head"><div><h2>Configured model map</h2><p>Save writes one mapping to the local project manifest. Host availability and substitution must be checked separately.</p></div></div><div id="model-grid" class="model-grid"></div></div><div id="model-status" class="model-status" role="status"></div><div class="callout"><strong>Environment settings take priority</strong><p>An environment variable such as <code>JEV_RUNTIME_MODEL_BALANCED_BUILD</code> overrides the project mapping. If a card says environment, change that variable before starting the agent. The dashboard never edits credentials or host configuration.</p></div></section>
+        <section id="view-projects" class="view"><div class="page-head"><div><div class="eyebrow">PROJECT CONTEXT</div><h1>Project and safety</h1><p>Understand the manifest and preview policy recipes before changing configuration.</p></div></div><div class="two-column"><section class="panel"><div class="panel-head"><div><h2>Registered project</h2><p>Local manifest and current operating mode</p></div></div><div id="project-detail" class="detail-content"></div></section><section class="panel"><div class="panel-head"><div><h2>Safety policy</h2><p>Verified facts remain authoritative</p></div></div><div id="policy-detail" class="detail-content"></div></section></div><section class="panel recipes-panel"><div class="panel-head"><div><h2>Policy recipes</h2><p>Preview changes here. Applying a recipe requires an explicit CLI command and matching project identity.</p></div></div><div id="recipe-grid" class="recipe-grid"></div><div id="recipe-preview" class="recipe-preview"></div></section></section>
+        <section id="view-results" class="view"><div class="page-head"><div><div class="eyebrow">OBSERVED OUTCOMES</div><h1>Results, without invented numbers.</h1><p>Actual log counts show JEV decisions, local fallbacks, and routes applied.</p></div></div><div id="result-metrics" class="metrics"></div><div class="two-column"><section class="panel"><div class="panel-head"><div><h2>Provider mix</h2><p>JEV versus labeled local fallback</p></div></div><div id="provider-bars" class="profile-bars"></div></section><section class="panel"><div class="panel-head"><div><h2>What this does not prove</h2></div></div><div class="truth-list"><p>Requested models are not proof of the model that actually ran.</p><p>Decision counts are not token or dollar savings.</p><p>A preview is not an executed route.</p><p>Use host records to verify actual runtime and effort.</p></div></section></div></section>
+        <section id="view-handoff" class="view"><div class="page-head"><div><div class="eyebrow">PORTABLE CONTEXT</div><h1>Safe handoffs</h1><p>Carry project identity and routing context to another agent without including the original prompt or tokens.</p></div></div><div class="two-column lab-grid"><section class="panel form-panel"><div class="panel-head"><div><h2>Create a packet</h2><p>The packet is context, not authorization.</p></div></div><form id="handoff-form"><label for="handoff-prompt">TASK CONTEXT</label><textarea id="handoff-prompt" rows="8" maxlength="12000" placeholder="Describe the work to hand off..."></textarea><p class="field-note">This uses local routing only. It never sends the task to a router and never includes the raw prompt in the exported packet.</p><button class="button primary" type="submit">Create handoff <span>→</span></button></form></section><section class="panel result-panel"><div class="panel-head"><div><h2>Handoff packet</h2><p>Review the fields before sharing with another thread.</p></div><button id="download-handoff" class="text-link" hidden>Download JSON ↓</button></div><div id="handoff-result" class="empty-state result-empty"><span>↗</span><h3>No packet yet</h3><p>Create one from the task context on the left.</p></div></section></div></section>
+      </div>
+    </main>
+  </div>
+  <script src="/app.js" defer></script>
+</body>
+</html>

@@ -39,3 +39,4 @@ jobs:
           cache-dependency-path: plugins/jev-control-plane/examples/vercel-router/package-lock.json
       - run: npm ci
       - run: npm run typecheck
+      - run: node --check ../../dashboard/app.js

@@ -1,0 +1,23 @@
+name: JEV PR advice
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  advise:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Recommend review depth
+        env:
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          python3 plugins/jev-control-plane/scripts/jev_control_plane.py pr-advice --base "$PR_BASE" --head "$PR_HEAD" --title-env PR_TITLE --markdown >> "$GITHUB_STEP_SUMMARY"

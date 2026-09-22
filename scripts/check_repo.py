@@ -97,6 +97,14 @@ def validate_packaging() -> None:
         ROOT / "CONTRIBUTING.md",
         ROOT / "CHANGELOG.md",
         PLUGIN / "skills" / "jev-control-plane" / "SKILL.md",
+        PLUGIN / "scripts" / "jev_features.py",
+        PLUGIN / "scripts" / "jev_dashboard.py",
+        PLUGIN / "dashboard" / "index.html",
+        PLUGIN / "dashboard" / "styles.css",
+        PLUGIN / "dashboard" / "app.js",
+        ROOT / "docs" / "dashboard.md",
+        ROOT / "docs" / "advanced-features.md",
+        ROOT / "docs" / "adapters.md",
     ]
     missing = [str(path.relative_to(ROOT)) for path in required if not path.is_file()]
     if missing:
@@ -126,15 +134,20 @@ def validate_documentation() -> None:
                 raise AssertionError(
                     f"broken local link in {document.relative_to(ROOT)}: {target}"
                 )
+    for name in (
+        "dashboard-overview.png", "dashboard-decisions.png", "dashboard-test-lab.png",
+        "dashboard-model-controls.png", "dashboard-projects.png",
+    ):
+        image = ROOT / "docs" / "images" / name
+        if not image.is_file() or not image.read_bytes().startswith(b"\x89PNG\r\n\x1a\n"):
+            raise AssertionError(f"missing or invalid dashboard screenshot: {name}")
     print("valid documentation consistency")
 
 
 def main() -> int:
     validate_json_files()
-    py_compile.compile(
-        str(PLUGIN / "scripts" / "jev_control_plane.py"),
-        doraise=True,
-    )
+    for name in ("jev_control_plane.py", "jev_features.py", "jev_dashboard.py"):
+        py_compile.compile(str(PLUGIN / "scripts" / name), doraise=True)
     validate_schemas()
     validate_packaging()
     validate_documentation()

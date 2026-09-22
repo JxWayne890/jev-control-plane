@@ -257,7 +257,9 @@ def live_identity_checks(config: dict[str, Any], cwd: Path) -> dict[str, Any]:
     checks: dict[str, Any] = {}
 
     github = services.get("github", {})
-    if shutil.which("gh"):
+    if not github:
+        checks["github"] = {"status": "not_configured"}
+    elif shutil.which("gh"):
         code, login = run(["gh", "api", "user", "--jq", ".login"], cwd, 8)
         expected = github.get("expected_login")
         checks["github"] = {
@@ -269,7 +271,9 @@ def live_identity_checks(config: dict[str, Any], cwd: Path) -> dict[str, Any]:
         checks["github"] = {"status": "cli_missing"}
 
     supabase = services.get("supabase", {})
-    if shutil.which("supabase"):
+    if not supabase:
+        checks["supabase"] = {"status": "not_configured"}
+    elif shutil.which("supabase"):
         code, output = run(["supabase", "projects", "list", "--output", "json"], cwd, 10)
         expected_ref = supabase.get("project_ref")
         present = False
@@ -290,7 +294,9 @@ def live_identity_checks(config: dict[str, Any], cwd: Path) -> dict[str, Any]:
         checks["supabase"] = {"status": "cli_missing"}
 
     vercel = services.get("vercel", {})
-    if shutil.which("vercel"):
+    if not vercel:
+        checks["vercel"] = {"status": "not_configured"}
+    elif shutil.which("vercel"):
         code, identity = run(["vercel", "whoami"], cwd, 8)
         expected = vercel.get("expected_login")
         checks["vercel"] = {
@@ -613,18 +619,29 @@ def apply_jev_decision(
     decision["routing_adjustments"] = adjustments
 
 
-def runtime_model(profile: str, host: str = "codex") -> str:
+def runtime_model(profile: str, host: str = "codex", config: dict[str, Any] | None = None) -> str:
     prefix = "JEV_CLAUDE_MODEL" if host == "claude" else "JEV_RUNTIME_MODEL"
     key = f"{prefix}_{profile.upper()}"
     configured = os.environ.get(key, "").strip()
     defaults = CLAUDE_MODEL_DEFAULTS if host == "claude" else RUNTIME_MODEL_DEFAULTS
-    return configured or defaults[profile]
+    project_mapping = (config or {}).get("runtime_models", {}).get(host, {}).get(profile)
+    project_value = project_mapping.strip() if isinstance(project_mapping, str) else ""
+    return configured or project_value or defaults[profile]
 
 
-def apply_runtime_route(decision: dict[str, Any], host: str = "codex") -> None:
+def routing_mode(config: dict[str, Any]) -> str:
+    """Return the effective delegated routing mode without trusting arbitrary values."""
+    environment_mode = os.environ.get("JEV_ROUTING_MODE")
+    if environment_mode in {"active", "shadow"}:
+        return environment_mode
+    project_mode = config.get("routing", {}).get("mode")
+    return project_mode if project_mode in {"active", "shadow"} else "active"
+
+
+def apply_runtime_route(decision: dict[str, Any], host: str = "codex", config: dict[str, Any] | None = None) -> None:
     decision["runtime"] = {
         "host": host,
-        "model": runtime_model(decision["model"]["profile"], host),
+        "model": runtime_model(decision["model"]["profile"], host, config),
         "reasoning_effort": decision["model"]["reasoning_effort"],
     }
 
@@ -693,6 +710,7 @@ def decide(
         "warnings": warnings,
         "decision_provider": "local_fallback",
         "decision_model": "local_rules_v1",
+        "routing_mode": routing_mode(config),
     }
     if use_jev:
         response, error = request_jev_decision(prompt, config, decision, git, cwd)
@@ -705,7 +723,7 @@ def decide(
             decision["warnings"].append(error)
     if live:
         decision["identity_checks"] = live_identity_checks(config, cwd)
-    apply_runtime_route(decision, host)
+    apply_runtime_route(decision, host, config)
     return decision
 
 
@@ -766,6 +784,7 @@ def hook_context(decision: dict[str, Any]) -> str:
         f"reasoning={decision['model']['reasoning_effort']}; "
         f"runtime_model={decision['runtime']['model']}; "
         f"runtime_reasoning={decision['runtime']['reasoning_effort']}; "
+        f"routing_mode={decision['routing_mode']}; "
         f"confirmation={decision['requires_confirmation']}; "
         f"external_writes_blocked={decision['external_writes_blocked']}; "
         f"warnings={warnings}; definition_of_done={done_text}. "
@@ -803,7 +822,20 @@ def route_tool_call(payload: dict[str, Any]) -> dict[str, Any] | None:
         return None
     cwd = Path(payload.get("cwd") or os.getcwd())
     decision = decide(prompt, cwd, use_jev=True)
+    decision["route_applied"] = decision["routing_mode"] == "active"
     record_decision(decision, prompt)
+    if decision["routing_mode"] == "shadow":
+        return {
+            "hookSpecificOutput": {
+                "hookEventName": "PreToolUse",
+                "additionalContext": (
+                    "JEV shadow mode observed delegated work without changing tool input. "
+                    f"Recommendation: profile={decision['model']['profile']}, "
+                    f"model={decision['runtime']['model']}, "
+                    f"reasoning={decision['runtime']['reasoning_effort']}."
+                ),
+            }
+        }
     updated = dict(tool_input)
     updated[prompt_field] = routed_prompt(prompt, decision)
     updated["model"] = decision["runtime"]["model"]
@@ -834,7 +866,20 @@ def route_claude_agent_call(payload: dict[str, Any]) -> dict[str, Any] | None:
         return None
     cwd = Path(payload.get("cwd") or os.getcwd())
     decision = decide(prompt, cwd, use_jev=True, host="claude")
+    decision["route_applied"] = decision["routing_mode"] == "active"
     record_decision(decision, prompt)
+    if decision["routing_mode"] == "shadow":
+        return {
+            "hookSpecificOutput": {
+                "hookEventName": "PreToolUse",
+                "additionalContext": (
+                    "JEV shadow mode observed delegated work without changing tool input. "
+                    f"Recommendation: profile={decision['model']['profile']}, "
+                    f"model={decision['runtime']['model']}, "
+                    f"reasoning={decision['runtime']['reasoning_effort']}."
+                ),
+            }
+        }
     updated = dict(tool_input)
     updated["prompt"] = routed_prompt(prompt, decision)
     agent_type = tool_input.get("subagent_type")
@@ -947,7 +992,91 @@ def main() -> int:
         default="Verify configured account identities",
         help="Optional request context. Neutral identity verification is used by default.",
     )
+    dashboard_parser = subparsers.add_parser("dashboard")
+    dashboard_parser.add_argument("--cwd", default=os.getcwd())
+    dashboard_parser.add_argument("--data-dir")
+    dashboard_parser.add_argument("--port", type=int, default=8765)
+    dashboard_parser.add_argument("--demo", action="store_true")
+    recipes_parser = subparsers.add_parser("recipes")
+    recipes_parser.add_argument("--cwd", default=os.getcwd())
+    recipes_parser.add_argument("--preview")
+    recipes_parser.add_argument("--apply")
+    recipes_parser.add_argument("--project-id")
+    handoff_parser = subparsers.add_parser("handoff")
+    handoff_parser.add_argument("--prompt", required=True)
+    handoff_parser.add_argument("--cwd", default=os.getcwd())
+    handoff_parser.add_argument("--host", choices=("codex", "claude"), default="codex")
+    handoff_parser.add_argument("--use-jev", action="store_true")
+    verify_parser = subparsers.add_parser("handoff-verify")
+    verify_parser.add_argument("--file", required=True)
+    adapter_parser = subparsers.add_parser("adapter-check")
+    adapter_parser.add_argument("--spec", required=True)
+    advice_parser = subparsers.add_parser("pr-advice")
+    advice_parser.add_argument("--cwd", default=os.getcwd())
+    advice_parser.add_argument("--base", required=True)
+    advice_parser.add_argument("--head", default="HEAD")
+    advice_parser.add_argument("--title", default="")
+    advice_parser.add_argument("--title-env")
+    advice_parser.add_argument("--use-jev", action="store_true")
+    advice_parser.add_argument("--markdown", action="store_true")
     args = parser.parse_args()
+
+    if args.command == "dashboard":
+        from jev_dashboard import serve_dashboard
+        return serve_dashboard(Path(args.cwd), args.port, Path(args.data_dir) if args.data_dir else None, args.demo)
+
+    if args.command in {"recipes", "handoff", "handoff-verify", "adapter-check", "pr-advice"}:
+        import jev_features as features
+
+        if args.command == "recipes":
+            config, manifest, _ = load_config(Path(args.cwd))
+            if args.apply:
+                if manifest is None:
+                    parser.error("No project manifest found")
+                if not args.project_id:
+                    parser.error("--project-id is required when applying a recipe")
+                print(json.dumps(features.apply_recipe(manifest, args.apply, args.project_id), indent=2))
+            elif args.preview:
+                preview = features.preview_recipe(config, args.preview)
+                print(json.dumps({
+                    "recipe": preview["recipe"],
+                    "before": {key: config.get(key) for key in ("policy", "routing")},
+                    "after": {key: preview["after"].get(key) for key in ("policy", "routing")},
+                }, indent=2))
+            else:
+                print(json.dumps(features.list_recipes(), indent=2))
+            return 0
+        if args.command == "handoff":
+            decision = decide(args.prompt, Path(args.cwd), use_jev=args.use_jev, host=args.host)
+            print(json.dumps(features.build_handoff(decision), indent=2))
+            return 0
+        if args.command == "handoff-verify":
+            try:
+                packet = json.loads(Path(args.file).read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                packet = None
+            report = features.verify_handoff(packet)
+            print(json.dumps(report, indent=2))
+            return 0 if report["valid"] else 1
+        if args.command == "adapter-check":
+            try:
+                adapter = json.loads(Path(args.spec).read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                adapter = None
+            report = features.validate_adapter(adapter)
+            print(json.dumps(report, indent=2))
+            return 0 if report["valid"] else 1
+        title = os.environ.get(args.title_env, "") if args.title_env else args.title
+        try:
+            changes = features.collect_pr_changes(Path(args.cwd), args.base, args.head)
+        except ValueError as error:
+            parser.error(str(error))
+        names = " ".join(item["path"] for item in changes[:30])
+        prompt = f"Review pull request: {title[:240]}. Changed paths: {names[:3000]}"
+        decision = decide(prompt, Path(args.cwd), use_jev=args.use_jev)
+        report = features.pr_advice(title, changes, decision)
+        print(features.pr_markdown(report) if args.markdown else json.dumps(report, indent=2))
+        return 0
 
     if args.command == "hook":
         try:

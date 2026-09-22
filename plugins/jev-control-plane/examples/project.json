@@ -55,5 +55,8 @@
   "policy": {
     "production_requires_confirmation": true,
     "destructive_actions": "block_without_explicit_request"
+  },
+  "routing": {
+    "mode": "active"
   }
 }

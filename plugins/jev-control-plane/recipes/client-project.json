@@ -1,0 +1,12 @@
+{
+  "id": "client-project",
+  "name": "Client project",
+  "description": "Use active delegated routing while retaining confirmation and destructive action safeguards.",
+  "changes": {
+    "routing": {"mode": "active"},
+    "policy": {
+      "production_requires_confirmation": true,
+      "destructive_actions": "block_without_explicit_request"
+    }
+  }
+}

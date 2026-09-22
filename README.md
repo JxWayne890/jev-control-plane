@@ -11,6 +11,10 @@ Most importantly, the routing decision does not consume the coding agent's reaso
 
 The decision considers task complexity, project scope, repository identity, environment, reversibility, and operational risk. Verified local facts and fixed safety rules remain authoritative before the coding agent acts.
 
+![JEV Control Plane dashboard showing sample routing decisions](docs/images/dashboard-overview.png)
+
+The dashboard runs locally and makes every recommendation inspectable. The image above uses clearly marked sample data. See the [dashboard guide](docs/dashboard.md) for more screenshots and a walkthrough.
+
 ## Why use it
 
 Choosing a model is part of the work. The right choice can change with the size of the task, the tools involved, the amount of reasoning required, and the consequences of getting it wrong.
@@ -42,10 +46,12 @@ JEV still reads input tokens, and the router may have its own provider cost. The
 
 1. Applies deterministic risk floors for production, billing, authentication, permissions, database migrations, schema changes, secrets, OAuth, DNS, integrations, APIs, and webhooks.
 2. Prevents the decision model from weakening verified safety rules.
-3. Requires confirmation for production or difficult to reverse actions when policy requires it.
-4. Blocks external writes when the repository does not match the configured project.
-5. Blocks consequential external work when required project context is missing.
+3. Signals when confirmation is needed for production or difficult to reverse actions.
+4. Marks external writes as blocked when the repository does not match the configured project.
+5. Marks consequential external work as blocked when required project context is missing.
 6. Offers read only GitHub, Supabase, and Vercel identity checks before consequential external operations.
+
+These safety fields are decision context, not a universal host tool gate or operating system sandbox. The acting agent and host must honor them. See the [security model](docs/security-model.md).
 
 ### Reliability, privacy, and auditing
 
@@ -65,7 +71,31 @@ JEV still reads input tokens, and the router may have its own provider cost. The
 4. Includes formal schemas, configuration guidance, a security model, and a verification report.
 5. Is open source under the Apache License 2.0.
 
+### Local dashboard and adoption tools
+
+1. Inspect recorded decisions, provider status, runtime requests, warnings, and safety outcomes in a local dashboard.
+2. Preview a task in the test lab without creating a thread or changing a model.
+3. Start in shadow mode to compare recommendations while leaving delegated tool inputs unchanged.
+4. Carry safe project and routing context between agents with portable handoff packets.
+5. Preview and apply guarded policy recipes for common project situations.
+6. Validate community adapters for additional coding agents.
+7. Get pull request review advice from local Git metadata, with an optional read only GitHub Actions summary.
+
 The `doctor` and `recent` commands make setup and decision history easier to inspect. Additional hosts and routing controls can be added in future updates.
+
+## Open the dashboard
+
+From the repository, run:
+
+```bash
+python3 plugins/jev-control-plane/scripts/jev_control_plane.py dashboard \
+  --cwd /path/to/project \
+  --data-dir /path/to/plugin/data
+```
+
+Open the local address printed by the command. The dashboard shows actual local decision records when a plugin data directory is available. Omit `--data-dir` if the host already provides `PLUGIN_DATA` or `CLAUDE_PLUGIN_DATA`. To explore the interface with explicitly fictional data, use `dashboard --demo`.
+
+The dashboard has an overview, decision explorer, test lab, model map, project and safety view, results, and handoff export. The test lab uses local rules by default. Selecting its JEV router option sends redacted task context to your configured private endpoint. Neither preview path starts agent work. See the [dashboard walkthrough](docs/dashboard.md).
 
 ## Agent support
 
@@ -118,6 +148,7 @@ The plugin:
 6. Marks repository mismatches and unresolved consequential work as blocked for external writes.
 7. Requires confirmation for production work when project policy enables that rule.
 8. Uses a labeled deterministic fallback when JEV is unavailable.
+9. Supports shadow mode for observation before active delegated routing.
 
 ## Requirements
 
@@ -229,6 +260,9 @@ Local decision logs contain a SHA 256 prompt digest, not the raw prompt. Logs ro
 7. [Contributing](CONTRIBUTING.md)
 8. [Security policy](SECURITY.md)
 9. [Launch post drafts](docs/launch-posts.md)
+10. [Dashboard walkthrough and screenshots](docs/dashboard.md)
+11. [Additional workflows](docs/advanced-features.md)
+12. [Community adapter kit](docs/adapters.md)
 
 ## License
 
@@ -237,6 +271,8 @@ Licensed under the Apache License 2.0. See [LICENSE](LICENSE).
 ## Creator
 
 Created by John W. Johnson.
+
+[GitHub](https://github.com/JxWayne890) · [Facebook](https://www.facebook.com/share/19KPAr8VVY/?mibextid=wwXIfr) · [Instagram](https://www.instagram.com/the_JohnWJohnson/) · [X](https://x.com/thejohnwjohnson)
 
 1. [GitHub](https://github.com/JxWayne890)
 2. [X](https://x.com/thejohnwjohnson)

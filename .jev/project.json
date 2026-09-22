@@ -26,7 +26,13 @@
         "risk classification",
         "production safety checks",
         "public release documentation",
-        "continuous integration"
+        "continuous integration",
+        "local dashboard",
+        "shadow mode",
+        "portable handoffs",
+        "policy recipes",
+        "community adapter contract",
+        "pull request advice"
       ],
       "excluded": [
         "changing the model of an already running turn",
@@ -44,7 +50,8 @@
       "Installed hook calls typesafe-ai/jev through Vercel AI Gateway",
       "Installed hook identifies JEV or local fallback on every decision",
       "Delegated create_thread and send_message_to_thread calls receive the selected runtime model and reasoning",
-      "Public documentation, license, security policy, contribution guide, and release checklist are present"
+      "Public documentation, license, security policy, contribution guide, and release checklist are present",
+      "Dashboard, advanced feature tests, usage guide, and screenshots are present"
     ]
   },
   "services": {
@@ -61,5 +68,8 @@
   "policy": {
     "production_requires_confirmation": true,
     "destructive_actions": "block_without_explicit_request"
+  },
+  "routing": {
+    "mode": "active"
   }
 }

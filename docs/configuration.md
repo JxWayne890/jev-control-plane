@@ -21,8 +21,13 @@ Important fields:
 | `services.vercel` | Expected Vercel project and optional login |
 | `environments.default` | Environment used unless production is explicit |
 | `policy.production_requires_confirmation` | Whether production requests require confirmation |
+| `routing.mode` | `active` applies delegated routing, `shadow` only records recommendations |
+| `runtime_models.codex` | Optional project mapping for Codex profiles |
+| `runtime_models.claude` | Optional project mapping for Claude Code profiles |
 
 Set `JEV_PROJECT_FILE` to use an explicit manifest path.
+
+Set `JEV_ROUTING_MODE=shadow` to try observe only routing without editing the manifest. See [additional workflows](advanced-features.md) for shadow mode and policy recipes.
 
 ## Router settings
 
@@ -56,6 +61,8 @@ security add-generic-password \
 ## Runtime model mappings
 
 Override any default mapping when a model is unavailable on your Codex host:
+
+The resolution order is environment variable, then project manifest mapping, then bundled default. The local dashboard can save a project mapping after confirmation. It does not edit environment variables or host configuration.
 
 ```bash
 export JEV_RUNTIME_MODEL_RAPID_DECISION="gpt-5.6-luna"
