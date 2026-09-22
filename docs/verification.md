@@ -1,12 +1,12 @@
 # Verification Report
 
-## Dashboard and workflow build, current working tree
+## Dashboard and workflow build
 
 The local repository check passes 53 automated tests. New coverage includes shadow mode for both hosts, sanitized handoff packets, guarded policy recipes, model mapping edits, adapter validation, local Git pull request advice, scoped account checks, and dashboard API boundaries. Python modules compile and the dashboard JavaScript passes `node --check`.
 
 The dashboard was opened in a real browser at desktop and mobile widths. The overview, decision explorer, test lab, model controls, and project safety views rendered without browser console errors. Five screenshots in `docs/images` were captured from the running interface. The test lab screenshot shows a local rules preview and did not call the remote JEV router or execute the task.
 
-This is local verification. GitHub Actions has not yet run on these changes, and a live installed Claude Code runtime check remains pending. The dashboard shows requested runtimes, not proof of the model the host actually launched.
+The automated checks above also passed in [GitHub Actions for the feature commit](https://github.com/JxWayne890/jev-control-plane/actions/runs/35685092187). A live installed Claude Code runtime check remains pending. The dashboard shows requested runtimes, not proof of the model the host actually launched.
 
 ## Expanded package checks, September 21, 2026
 
